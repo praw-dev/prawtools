@@ -30,3 +30,10 @@ at least 2 users.
     ```
 ./modutils.py --sync --ignore-css --limit=2 baz
 ```
+
+0. Send a message to approved submitters of subreddit __blah__. You will be
+prompted for the message, and asked to verify prior to sending the messages.
+
+    ```
+./modutils.py --message contributors --subject "The message subject" blah
+```

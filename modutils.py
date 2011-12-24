@@ -11,27 +11,10 @@ class ModUtils(object):
         self.reddit = Reddit(str(self), site)
         self.sub = self.reddit.get_subreddit(subreddit)
         self.verbose = verbose
-        self.my_moderation = self._current_flair = None
+        self._current_flair = None
 
     def __str__(self):
         return 'BBoe\'s ModUtils %s' % self.VERSION
-
-    def login(self, user, pswd):
-        if self.verbose:
-            print 'Logging in'
-        self.reddit.login(user, pswd)
-
-    def verify_subreddit_mod(function):  # pylint: disable-msg=E0213
-        def wrapped(self, *args, **kwargs):
-            if self.my_moderation is None:
-                if self.verbose:
-                    print 'Fetching moderator list for %s' % self.sub
-                self.my_moderation = [str(x).lower() for x in
-                                      self.reddit.user.my_moderation()]
-            if str(self.sub).lower() not in self.my_moderation:
-                raise Exception('You do not moderate %s' % self.sub)
-            return function(self, *args, **kwargs)  # pylint: disable-msg=E1102
-        return wrapped
 
     def current_flair(self):
         if self._current_flair is None:
@@ -45,7 +28,6 @@ class ModUtils(object):
             for item in self._current_flair:
                 yield item
 
-    @verify_subreddit_mod
     def flair_template_sync(self, editable, limit,  # pylint: disable-msg=R0912
                             static, sort, use_css, use_text):
         # Parameter verification
@@ -103,14 +85,48 @@ class ModUtils(object):
                 print 'Adding template: text: "%s" css: "%s"' % (text, css)
             self.sub.add_flair_template(text, css, editable)
 
-    @verify_subreddit_mod
+    def login(self, user, pswd):
+        if self.verbose:
+            print 'Logging in'
+        self.reddit.login(user, pswd)
+        if self.verbose:
+            print 'Fetching moderator list for %s' % self.sub
+        if str(self.sub).lower() not in [str(x).lower() for x in
+                                         self.reddit.user.my_moderation()]:
+            raise Exception('You do not moderate %s' % self.sub)
+
+    def message(self, category, subject, msg_file):
+        users = getattr(self.sub, 'get_%s' % category)()
+        if not users:
+            print 'There are no %s on %s.' % (category, str(self.sub))
+            return
+
+        if msg_file:
+            try:
+                msg = open(msg_file).read()
+            except IOError, error:
+                print str(error)
+                return
+        else:
+            print 'Enter message:'
+            msg = sys.stdin.read()
+
+        print ('You are about to send the following '
+               'message to the users %s:') % ', '.join([str(x) for x in users])
+        print '---BEGIN MESSAGE---\n%s\n---END MESSAGE---' % msg
+        if raw_input('Are you sure? yes/[no]: ').lower() not in ['y', 'yes']:
+            print 'Message sending aborted.'
+            return
+        for user in users:
+            user.compose_message(subject, msg)
+            print 'Sent to: %s' % str(user)
+
     def output_current_flair(self):
         for flair in self.current_flair():
             print flair['user']
             print '  Text: %s\n   CSS: %s' % (flair['flair_text'],
                                               flair['flair_css_class'])
 
-    @verify_subreddit_mod
     def output_list(self, category):
         print '%s users:' % category
         for user in getattr(self.sub, 'get_%s' % category)():
@@ -118,15 +134,20 @@ class ModUtils(object):
 
 
 def main():
+    mod_choices = ('banned', 'contributors', 'moderators')
+    mod_choices_dsp = ', '.join(['`%s`' % x for x in mod_choices])
     msg = {
         'css': 'Ignore the CSS field when synchronizing flair.',
         'edit': 'When adding flair templates, mark them as editable.',
+        'file': 'The file containing contents for --message',
         'flair': 'List flair for the subreddit.',
         'limit': ('The minimum number of users that must have the specified '
                   'flair in order to add as a template. default: %default'),
         'list': ('List the users in one of the following categories: '
-                 '`banned`, `contributors`, or `moderators`. May be specified '
-                 'more than once.'),
+                 '%s. May be specified more than once.') % mod_choices_dsp,
+        'msg': ('Send message to users of one of the following categories: '
+                '%s. Message subject provided via --subject, content provided '
+                'via --file or STDIN.') % mod_choices_dsp,
         'pswd': ('The password to use for login. Can only be used in '
                  'combination with "--user". See help for "--user".'),
         'site': 'The site to connect to defined in ~/.reddit_api.cfg.',
@@ -134,6 +155,7 @@ def main():
                  '`alpha` to add alphabetically, and `size` to first add '
                  'flair that is shared by the most number of users. '
                  'default: %default'),
+        'subject': 'The subject of the message to send for --message.',
         'sync': 'Synchronize flair templates with current user flair.',
         'text': 'Ignore the text field when synchronizing flair.',
         'user': ('The user to login as. If not specified the user (if any) '
@@ -145,10 +167,12 @@ def main():
     usage = 'Usage: %prog [options] SUBREDDIT'
     parser = OptionParser(usage=usage, version='%%prog %s' % ModUtils.VERSION)
     parser.add_option('-l', '--list', action='append', help=msg['list'],
-                      choices=('banned', 'contributors', 'moderators'),
-                      metavar='CATEGORY', default=[])
+                      choices=mod_choices, metavar='CATEGORY', default=[])
+    parser.add_option('-F', '--file', help=msg['file'])
     parser.add_option('-f', '--flair', action='store_true', help=msg['flair'])
     parser.add_option('-v', '--verbose', action='store_true', help=msg['v'])
+    parser.add_option('-m', '--message', choices=mod_choices, help=msg['msg'])
+    parser.add_option('', '--subject', help=msg['subject'])
 
     group = OptionGroup(parser, 'Site/Authentication options')
     group.add_option('-s', '--site', help=msg['site'])
@@ -173,6 +197,8 @@ def main():
         parser.error('Must provide --user when providing --pswd.')
     if len(args) == 0:
         parser.error('Must provide subreddit name.')
+    if options.message and not options.subject:
+        parser.error('Must provide --subject when providing --message.')
     subreddit = args[0]
 
     modutils = ModUtils(subreddit, options.site, options.verbose)
@@ -188,6 +214,8 @@ def main():
                                      static=None, sort=options.sort,
                                      use_css=options.ignore_css,
                                      use_text=options.ignore_text)
+    if options.message:
+        modutils.message(options.message, options.subject, options.file)
 
 if __name__ == '__main__':
     sys.exit(main())
