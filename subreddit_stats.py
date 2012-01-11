@@ -78,8 +78,8 @@ class SubRedditStats(object):
                 continue
             if submission.created_utc <= self.min_date:
                 break
-            if (since_last and submission.author == self.reddit.user and
-                submission.title.startswith(self.post_prefix)):
+            if (since_last and str(submission.author) == str(self.reddit.user)
+                and submission.title.startswith(self.post_prefix)):
                 # Use info in this post to update the min_date
                 # And don't include this post
                 self.min_date = max(self.min_date,
@@ -99,7 +99,7 @@ class SubRedditStats(object):
     def process_submitters(self):
         self.msg('DEBUG: Processing Submitters', 1)
         for i, submission in enumerate(self.submissions):
-            self.submitters[submission.author].append(submission)
+            self.submitters[str(submission.author)].append(submission)
             self.msg('%d/%d submissions' % (i + 1, len(self.submissions)), 2)
 
     def process_commenters(self):
@@ -109,7 +109,7 @@ class SubRedditStats(object):
                 continue
             self.comments.extend(submission.all_comments_flat)
             for comment in self.comments:
-                self.commenters[comment.author].append(comment)
+                self.commenters[str(comment.author)].append(comment)
             self.msg('%d/%d submissions' % (i + 1, len(self.submissions)), 2)
 
     def basic_stats(self):
@@ -189,7 +189,7 @@ class SubRedditStats(object):
                        '(by [%s](/user/%s))\n' % (
                     submission.title, submission.score,
                     submission.num_comments, submission.permalink, link,
-                    submission.author, submission.author))
+                    str(submission.author), str(submission.author)))
         return '%s\n' % retval
 
     def top_comments(self, num):
@@ -205,7 +205,8 @@ class SubRedditStats(object):
         for comment in top_comments:
             retval += ('1. [Comment](%s) in %s by [%s](/user/%s) (Score: %d)\n'
                        % (comment.permalink, comment.submission.title,
-                          comment.author, comment.author, score(comment)))
+                          str(comment.author), str(comment.author),
+                          score(comment)))
         return '%s\n' % retval
 
     def publish_results(self, subreddit, submitters, commenters, submissions,
