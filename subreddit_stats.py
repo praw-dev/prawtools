@@ -15,7 +15,7 @@ MAX_BODY_SIZE = 10000
 
 
 class SubRedditStats(object):
-    VERSION = '0.1.dev'
+    VERSION = '0.1'
 
     post_prefix = 'Subreddit Stats:'
     post_header = '---\n###%s\n'
@@ -32,6 +32,18 @@ class SubRedditStats(object):
         except (IndexError, TypeError):
             print 'End marker not found in previous submission. Aborting'
             sys.exit(1)
+
+    @staticmethod
+    def _permalink(permalink):
+        tokens = permalink.split('/')
+        if tokens[8] == '':  # submission
+            return '/comments/%s/_/' % (tokens[6])
+        else:  # comment
+            return '/comments/%s/_/%s?context=1' % (tokens[6], tokens[8])
+
+    @staticmethod
+    def _user(user):
+        return '[%s](/user/%s)' % (user, user)
 
     def __init__(self, subreddit, site, verbosity):
         self.reddit = Reddit(str(self), site)
@@ -90,10 +102,10 @@ class SubRedditStats(object):
                 # Use info in this post to update the min_date
                 # And don't include this post
                 self.msg('Found previous: %s' % submission.title, 2)
-                self.min_date = max(self.min_date,
-                                    self._previous_max(submission))
-                assert(self.prev_srs is None)
-                self.prev_srs = submission.permalink
+                if self.prev_srs == None:  # Only use the most recent
+                    self.min_date = max(self.min_date,
+                                        self._previous_max(submission))
+                    self.prev_srs = submission.permalink
                 continue
             self.submissions.append(submission)
         self.msg('DEBUG: Found %d submissions' % len(self.submissions), 1)
@@ -143,7 +155,7 @@ class SubRedditStats(object):
             retval += '__%s__|%d|%d\n' % triple
         return '%s\n' % retval
 
-    def top_submitters(self, num):
+    def top_submitters(self, num, num_submissions):
         num = min(num, len(self.submitters))
         if num <= 0:
             return ''
@@ -154,17 +166,19 @@ class SubRedditStats(object):
 
         retval = self.post_header % 'Top Submitters\' Top Submissions'
         for (author, submissions) in top_submitters:
-            retval += '0. %d pts, %d submissions: [%s](/user/%s)\n' % (
+            retval += '0. %d pts, %d submissions: %s\n' % (
                 sum(x.score for x in submissions), len(submissions),
-                author, author)
+                self._user(author))
             for sub in sorted(submissions, reverse=True,
-                              key=lambda x: x.score)[:10]:
+                              key=lambda x: x.score)[:num_submissions]:
+                title = sub.title.replace('\n', ' ').strip()
                 if sub.permalink != sub.url:
-                    retval += '  0. [%s](%s)' % (sub.title, sub.url)
+                    retval += '  0. [%s](%s)' % (title, sub.url)
                 else:
-                    retval += '  0. %s' % sub.title
+                    retval += '  0. %s' % title
                 retval += ' (%d pts, [%d comments](%s))\n' % (
-                    sub.score, sub.num_comments, sub.permalink)
+                    sub.score, sub.num_comments,
+                    self._permalink(sub.permalink))
             retval += '\n'
         return retval
 
@@ -181,8 +195,9 @@ class SubRedditStats(object):
 
         retval = self.post_header % 'Top Commenters'
         for author, comments in top_commenters:
-            retval += '0. [%s](/user/%s) (%d pts, %d comments)\n' % (
-                author, author, sum(score(x) for x in comments), len(comments))
+            retval += '0. %s (%d pts, %d comments)\n' % (
+                self._user(author), sum(score(x) for x in comments),
+                len(comments))
         return '%s\n' % retval
 
     def top_submissions(self, num):
@@ -196,12 +211,14 @@ class SubRedditStats(object):
         retval = self.post_header % 'Top Submissions'
         for sub in top_submissions:
             author = str(sub.author)
+            title = sub.title.replace('\n', ' ').strip()
             if sub.permalink != sub.url:
-                retval += '0. [%s](%s)' % (sub.title, sub.url)
+                retval += '0. [%s](%s)' % (title, sub.url)
             else:
-                retval += '0. %s' % sub.title
-            retval += ' by [%s](/user/%s) (%d pts, [%d comments](%s))\n' % (
-                author, author, sub.score, sub.num_comments, sub.permalink)
+                retval += '0. %s' % title
+            retval += ' by %s (%d pts, [%d comments](%s))\n' % (
+                self._user(author), sub.score, sub.num_comments,
+                self._permalink(sub.permalink))
         return '%s\n' % retval
 
     def top_comments(self, num):
@@ -216,9 +233,10 @@ class SubRedditStats(object):
         retval = self.post_header % 'Top Comments'
         for comment in top_comments:
             author = str(comment.author)
-            retval += ('0. %d pts: [%s](/user/%s)\'s [comment](%s) in %s\n'
-                       % (score(comment), author, author, comment.permalink,
-                          comment.submission.title))
+            title = comment.submission.title.replace('\n', ' ').strip()
+            retval += ('0. %d pts: %s\'s [comment](%s) in %s\n'
+                       % (score(comment), self._user(author),
+                          self._permalink(comment.permalink), title))
         return '%s\n' % retval
 
     def publish_results(self, subreddit, submitters, commenters, submissions,
@@ -231,16 +249,23 @@ class SubRedditStats(object):
             self.post_prefix, str(self.subreddit), timef(self.min_date),
             timef(self.max_date))
         if self.prev_srs:
-            prev = '[Previous Stat](%s)  \n' % self.prev_srs
+            prev = '[Previous Stat](%s)  \n' % self._permalink(self.prev_srs)
         else:
             prev = ''
 
-        body = self.basic_stats()
-        body += self.top_submitters(submitters)
-        body += self.top_commenters(commenters)
-        body += self.top_submissions(submissions)
-        body += self.top_comments(comments)
-        body += self.post_footer % (prev, self.max_date)
+        basic = self.basic_stats()
+        t_commenters = self.top_commenters(commenters)
+        t_submissions = self.top_submissions(submissions)
+        t_comments = self.top_comments(comments)
+        footer = self.post_footer % (prev, self.max_date)
+
+        body = ''
+        num_submissions = 10
+        while body == '' or len(body) > MAX_BODY_SIZE and num_submissions > 2:
+            t_submitters = self.top_submitters(submitters, num_submissions)
+            body = (basic + t_submitters + t_commenters + t_submissions +
+                    t_comments + footer)
+            num_submissions -= 1
 
         if len(body) > MAX_BODY_SIZE:
             print 'The resulting message is too big. Not submitting.'
@@ -275,15 +300,15 @@ def main():
         }
 
     parser = OptionParser(usage='usage: %prog [options] subreddit')
-    parser.add_option('-s', '--submitters', type='int', default=3,
+    parser.add_option('-s', '--submitters', type='int', default=5,
                       help='Number of top submitters to display '
                       '[default %default]')
-    parser.add_option('-c', '--commenters', type='int', default=3,
+    parser.add_option('-c', '--commenters', type='int', default=10,
                       help='Number of top commenters to display '
                       '[default %default]')
     parser.add_option('-a', '--after',
                       help='Submission ID to fetch after')
-    parser.add_option('-d', '--days', type='int', default=7,
+    parser.add_option('-d', '--days', type='int', default=32,
                       help=('Number of previous days to include submissions '
                             'from. Use 0 for unlimited. Default: %default'))
     parser.add_option('-v', '--verbose', action='count', default=0,
