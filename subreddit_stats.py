@@ -15,7 +15,7 @@ MAX_BODY_SIZE = 10000
 
 
 class SubRedditStats(object):
-    VERSION = '0.1'
+    VERSION = '0.2'
 
     post_prefix = 'Subreddit Stats:'
     post_header = '---\n###%s\n'
@@ -74,18 +74,19 @@ class SubRedditStats(object):
         self.min_date = self._previous_max(submission)
         self.prev_srs = prev_url
 
-    def fetch_recent_submissions(self, max_duration, after, since_last=True):
+    def fetch_recent_submissions(self, max_duration, after, exclude_self,
+                                 since_last=True):
         '''Fetches recent submissions in subreddit with boundaries.
 
         Does not include posts within the last three days as their scores may
         not be representative.
 
         Keyword arguments:
-        since_last -- boolean, if true use info from last submission to
-                      determine the stop point
         max_duration -- When set, specifies the number of days to include
         after -- When set, fetch all submission after this submission id.
-
+        exclude_self -- When true, don't include self posts.
+        since_last -- When true use info from last submission to determine the
+                      stop point
         '''
         if max_duration:
             self.min_date = self.max_date - DAYS_IN_SECONDS * max_duration
@@ -106,6 +107,8 @@ class SubRedditStats(object):
                     self.min_date = max(self.min_date,
                                         self._previous_max(submission))
                     self.prev_srs = submission.permalink
+                continue
+            if exclude_self and submission.is_self:
                 continue
             self.submissions.append(submission)
         self.msg('DEBUG: Found %d submissions' % len(self.submissions), 1)
@@ -318,6 +321,9 @@ def main():
     parser.add_option('-R', '--submission-reddit',
                       help=('Subreddit to submit to. If not present, '
                             'submits to the subreddit processed'))
+    parser.add_option('', '--no-self', action='store_true',
+                      help=('Do not include self posts (and their comments) in'
+                            ' the calculation. '))
     parser.add_option('', '--prev',
                       help='Statically provide the URL of previous SRS page.')
 
@@ -341,7 +347,8 @@ def main():
     if options.prev:
         srs.prev_stat(options.prev)
     if not srs.fetch_recent_submissions(max_duration=options.days,
-                                        after=options.after):
+                                        after=options.after,
+                                        exclude_self=options.no_self):
         print 'No submissions were found.'
         return 1
     srs.process_submitters()
