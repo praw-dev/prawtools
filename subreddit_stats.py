@@ -15,7 +15,7 @@ MAX_BODY_SIZE = 10000
 
 
 class SubRedditStats(object):
-    VERSION = '0.2'
+    VERSION = '0.2.0'
 
     post_prefix = 'Subreddit Stats:'
     post_header = '---\n###%s\n'
@@ -43,7 +43,7 @@ class SubRedditStats(object):
 
     @staticmethod
     def _user(user):
-        return '[%s](/user/%s)' % (user, user)
+        return '[%s](/user/%s)' % (user.replace('_', '\_'), user)
 
     def __init__(self, subreddit, site, verbosity):
         self.reddit = Reddit(str(self), site)
@@ -65,9 +65,14 @@ class SubRedditStats(object):
             print 'Logging in'
         self.reddit.login(user, pswd)
 
-    def msg(self, msg, level):
+    def msg(self, msg, level, overwrite=False):
         if self.verbosity >= level:
-            print msg
+            sys.stdout.write(msg)
+            if overwrite:
+                sys.stdout.write('\r')
+                sys.stdout.flush()
+            else:
+                sys.stdout.write('\n')
 
     def prev_stat(self, prev_url):
         submission = self.reddit.get_submission(prev_url)
@@ -127,8 +132,10 @@ class SubRedditStats(object):
             self.submitters[str(submission.author)].append(submission)
 
     def process_commenters(self):
-        self.msg('DEBUG: Processing Commenters', 1)
+        num = len(self.submissions)
+        self.msg('DEBUG: Processing Commenters on %d submissions' % num, 1)
         for i, submission in enumerate(self.submissions):
+            self.msg('%d/%d submissions' % (i + 1, num), 2, overwrite=True)
             if submission.num_comments == 0:
                 continue
             try:
@@ -137,7 +144,6 @@ class SubRedditStats(object):
                 print 'Too many more comments objects on %s.' % submission
                 self.comments.extend([x for x in submission.comments_flat if
                                       isinstance(x, Comment)])
-            self.msg('%d/%d submissions' % (i + 1, len(self.submissions)), 2)
         for comment in self.comments:
             self.commenters[str(comment.author)].append(comment)
 
