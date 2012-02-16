@@ -147,15 +147,20 @@ class SubRedditStats(object):
         comm_ups = sum(x.ups for x in self.comments)
         comm_downs = sum(x.downs for x in self.comments)
 
-        values = [('Total', len(self.submissions), len(self.comments)),
-                  ('Unique Redditors', len(self.submitters),
-                   len(self.commenters)),
-                  ('Upvotes', sub_ups, comm_ups),
-                  ('Downvotes', sub_downs, comm_downs)]
+        sub_up_perc = sub_ups * 100 / (sub_ups + sub_downs)
+        comm_up_perc = comm_ups * 100 / (comm_ups + comm_downs)
 
-        retval = '||Submissions|Comments|\n:-:|--:|--:\n'
-        for triple in values:
-            retval += '__%s__|%d|%d\n' % triple
+        values = [('Total', len(self.submissions), '', len(self.comments), ''),
+                  ('Unique Redditors', len(self.submitters), '',
+                   len(self.commenters), ''),
+                  ('Upvotes', sub_ups, '%d%%' % sub_up_perc,
+                   comm_ups, '%d%%' % comm_up_perc),
+                  ('Downvotes', sub_downs, '%d%%' % (100 - sub_up_perc),
+                   comm_downs, '%d%%' % (100 - comm_up_perc))]
+
+        retval = '||Submissions|%|Comments|%|\n:-:|--:|--:|--:|--:\n'
+        for quad in values:
+            retval += '__%s__|%d|%s|%d|%s\n' % quad
         return '%s\n' % retval
 
     def top_submitters(self, num, num_submissions):
