@@ -280,14 +280,14 @@ class SubRedditStats(object):
         return '%s\n' % retval
 
     def publish_results(self, subreddit, submitters, commenters, submissions,
-                        comments, debug=False):
+                        comments, top, debug=False):
         def timef(timestamp):
             dtime = datetime.fromtimestamp(timestamp)
             return dtime.strftime('%Y-%m-%d %H:%M PDT')
 
-        title = '%s %s submissions from %s to %s' % (
-            self.post_prefix, str(self.subreddit), timef(self.min_date),
-            timef(self.max_date))
+        title = '%s %s %ssubmissions from %s to %s' % (
+            self.post_prefix, str(self.subreddit), 'top ' if top else '',
+            timef(self.min_date), timef(self.max_date))
         if self.prev_srs:
             prev = '[Previous Stat](%s)  \n' % self._permalink(self.prev_srs)
         else:
@@ -359,7 +359,8 @@ def main():
                       help=('Subreddit to submit to. If not present, '
                             'submits to the subreddit processed'))
     parser.add_option('-t', '--top',
-                      help='Run on top submissions by week, month, year, all')
+                      help=('Run on top submissions either by day, week, '
+                            'month, year, or all'))
     parser.add_option('', '--no-self', action='store_true',
                       help=('Do not include self posts (and their comments) in'
                             ' the calculation. '))
@@ -398,7 +399,7 @@ def main():
     if options.commenters > 0:
         srs.process_commenters()
     srs.publish_results(submission_reddit, options.submitters,
-                        options.commenters, 5, 5, options.debug)
+                        options.commenters, 5, 5, options.top, options.debug)
 
 
 if __name__ == '__main__':
