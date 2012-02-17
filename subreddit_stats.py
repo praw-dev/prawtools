@@ -126,6 +126,32 @@ class SubRedditStats(object):
         self.max_date = self.submissions[-1].created_utc
         return True
 
+    def fetch_top_submissions(self, top, exclude_self):
+        '''Fetches top 1000 submissions by some top value.
+
+        Keyword arguments:
+        top -- One of week, month, year, all
+        exclude_self -- When true, don't include self posts.
+        '''
+        if top not in ('day', 'week', 'month', 'year', 'all'):
+            raise TypeError('%r is not a valid top value' % top)
+        self.msg('DEBUG: Fetching submissions', 1)
+        url_data = {'t': top}
+        for submission in self.subreddit.get_top(limit=None,
+                                                 url_data=url_data):
+            if exclude_self and submission.is_self:
+                continue
+            self.submissions.append(submission)
+        self.msg('DEBUG: Found %d submissions' % len(self.submissions), 1)
+        if len(self.submissions) == 0:
+            return False
+
+        # Update real min and max dates
+        self.submissions.sort(key=lambda x: x.created_utc)
+        self.min_date = self.submissions[0].created_utc
+        self.max_date = self.submissions[-1].created_utc
+        return True
+
     def process_submitters(self):
         self.msg('DEBUG: Processing Submitters', 1)
         for submission in self.submissions:
@@ -332,6 +358,8 @@ def main():
     parser.add_option('-R', '--submission-reddit',
                       help=('Subreddit to submit to. If not present, '
                             'submits to the subreddit processed'))
+    parser.add_option('-t', '--top',
+                      help='Run on top submissions by week, month, year, all')
     parser.add_option('', '--no-self', action='store_true',
                       help=('Do not include self posts (and their comments) in'
                             ' the calculation. '))
@@ -357,9 +385,13 @@ def main():
     srs.login(options.user, options.pswd)
     if options.prev:
         srs.prev_stat(options.prev)
-    if not srs.fetch_recent_submissions(max_duration=options.days,
-                                        after=options.after,
-                                        exclude_self=options.no_self):
+    if options.top:
+        found = srs.fetch_top_submissions(options.top, options.no_self)
+    else:
+        found = srs.fetch_recent_submissions(max_duration=options.days,
+                                             after=options.after,
+                                             exclude_self=options.no_self)
+    if not found:
         print 'No submissions were found.'
         return 1
     srs.process_submitters()
