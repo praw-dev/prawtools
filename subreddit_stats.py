@@ -56,6 +56,9 @@ class SubRedditStats(object):
         self.min_date = 0
         self.max_date = time.time() - DAYS_IN_SECONDS * 3
         self.prev_srs = None
+        # Config
+        self.reddit.config.comment_limit = -1  # Fetch max comments possible
+        self.reddit.config.comment_sort = 'top'
 
     def __str__(self):
         return 'BBoe\'s SubRedditStats %s' % self.VERSION
@@ -155,7 +158,8 @@ class SubRedditStats(object):
     def process_submitters(self):
         self.msg('DEBUG: Processing Submitters', 1)
         for submission in self.submissions:
-            self.submitters[str(submission.author)].append(submission)
+            if submission.author:
+                self.submitters[str(submission.author)].append(submission)
 
     def process_commenters(self):
         num = len(self.submissions)
@@ -164,14 +168,14 @@ class SubRedditStats(object):
             self.msg('%d/%d submissions' % (i + 1, num), 2, overwrite=True)
             if submission.num_comments == 0:
                 continue
-            try:
-                self.comments.extend(submission.all_comments_flat)
-            except ClientException:
-                print 'Too many more comments objects on %s.' % submission
-                self.comments.extend([x for x in submission.comments_flat if
-                                      isinstance(x, Comment)])
+            self.comments.extend(submission.all_comments_flat)
+            if submission._orphaned:
+                self.comments.extend(submission._orphaned)
+                print '%d orphaned on %r' % (len(submission._orphaned),
+                                             str(submission))
         for comment in self.comments:
-            self.commenters[str(comment.author)].append(comment)
+            if comment.author:
+                self.commenters[str(comment.author)].append(comment)
 
     def basic_stats(self):
         sub_ups = sum(x.ups for x in self.submissions)
