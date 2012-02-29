@@ -169,10 +169,8 @@ class SubRedditStats(object):
             if submission.num_comments == 0:
                 continue
             self.comments.extend(submission.all_comments_flat)
-            if submission._orphaned:
-                self.comments.extend(submission._orphaned)
-                print '%d orphaned on %r' % (len(submission._orphaned),
-                                             str(submission))
+            for orphans in submission._orphaned.values():
+                self.comments.extend(orphans)
         for comment in self.comments:
             if comment.author:
                 self.commenters[str(comment.author)].append(comment)
