@@ -168,7 +168,11 @@ class SubRedditStats(object):
             self.msg('%d/%d submissions' % (i + 1, num), 2, overwrite=True)
             if submission.num_comments == 0:
                 continue
-            self.comments.extend(submission.all_comments_flat)
+            try:
+                self.comments.extend(submission.all_comments_flat)
+            except Exception as exception:
+                print 'Exception fetching comments on %r: %s' % (submission.content_id,
+                                                                 str(exception))
             for orphans in submission._orphaned.values():
                 self.comments.extend(orphans)
         for comment in self.comments:
