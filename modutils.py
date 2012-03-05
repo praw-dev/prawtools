@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import re
 import sys
 from optparse import OptionGroup, OptionParser
 from reddit import Reddit
@@ -15,6 +16,22 @@ class ModUtils(object):
 
     def __str__(self):
         return 'BBoe\'s ModUtils %s' % self.VERSION
+
+    def add_users(self, category):
+        mapping = {'banned': 'ban',
+                   'contributors': 'make_contributor',
+                   'moderators': 'make_moderator'}
+
+        if category not in mapping:
+            print '%r is not a valid option for --add' % category
+            return
+
+        func = getattr(self.sub, mapping[category])
+        print 'Enter user names (any separation should suffice):'
+        data = sys.stdin.read().strip()
+        for name in re.split('[^A-Za-z_]+', data):
+            func(name)
+            print 'Added %r to %s' % (name, category)
 
     def current_flair(self):
         if self._current_flair is None:
@@ -137,6 +154,8 @@ def main():
     mod_choices = ('banned', 'contributors', 'moderators')
     mod_choices_dsp = ', '.join(['`%s`' % x for x in mod_choices])
     msg = {
+        'add': ('Add users to one of the following categories: %s' %
+                mod_choices_dsp),
         'css': 'Ignore the CSS field when synchronizing flair.',
         'edit': 'When adding flair templates, mark them as editable.',
         'file': 'The file containing contents for --message',
@@ -150,7 +169,7 @@ def main():
                 'via --file or STDIN.') % mod_choices_dsp,
         'pswd': ('The password to use for login. Can only be used in '
                  'combination with "--user". See help for "--user".'),
-        'site': 'The site to connect to defined in ~/.reddit_api.cfg.',
+        'site': 'The site to connect to defined in your reddit_api.cfg.',
         'sort': ('The order to add flair templates. Available options are '
                  '`alpha` to add alphabetically, and `size` to first add '
                  'flair that is shared by the most number of users. '
@@ -166,6 +185,7 @@ def main():
 
     usage = 'Usage: %prog [options] SUBREDDIT'
     parser = OptionParser(usage=usage, version='%%prog %s' % ModUtils.VERSION)
+    parser.add_option('-a', '--add', help=msg['add']),
     parser.add_option('-l', '--list', action='append', help=msg['list'],
                       choices=mod_choices, metavar='CATEGORY', default=[])
     parser.add_option('-F', '--file', help=msg['file'])
@@ -204,6 +224,8 @@ def main():
     modutils = ModUtils(subreddit, options.site, options.verbose)
     modutils.login(options.user, options.pswd)
 
+    if options.add:
+        modutils.add_users(options.add)
     for category in options.list:
         modutils.output_list(category)
     if options.flair:
