@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import re
+import six
 import sys
 import time
 from collections import defaultdict
@@ -30,7 +31,7 @@ class SubRedditStats(object):
             val = SubRedditStats.re_marker.findall(submission.selftext)[-1]
             return float(val)
         except (IndexError, TypeError):
-            print 'End marker not found in previous submission. Aborting'
+            print('End marker not found in previous submission. Aborting')
             sys.exit(1)
 
     @staticmethod
@@ -65,7 +66,7 @@ class SubRedditStats(object):
 
     def login(self, user, pswd):
         if self.verbosity > 0:
-            print 'Logging in'
+            print('Logging in')
         self.reddit.login(user, pswd)
 
     def msg(self, msg, level, overwrite=False):
@@ -171,9 +172,9 @@ class SubRedditStats(object):
             try:
                 self.comments.extend(submission.all_comments_flat)
             except Exception as exception:
-                print 'Exception fetching comments on %r: %s' % (submission.content_id,
-                                                                 str(exception))
-            for orphans in submission._orphaned.values():
+                print('Exception fetching comments on %r: %s' %
+                      (submission.content_id, str(exception)))
+            for orphans in six.itervalues(submission._orphaned):
                 self.comments.extend(orphans)
         for comment in self.comments:
             if comment.author:
@@ -206,7 +207,7 @@ class SubRedditStats(object):
         if num <= 0:
             return ''
 
-        top_submitters = sorted(self.submitters.items(), reverse=True,
+        top_submitters = sorted(six.iteritems(self.submitters), reverse=True,
                                 key=lambda x: (sum(y.score for y in x[1]),
                                                len(x[1])))[:num]
 
@@ -235,7 +236,7 @@ class SubRedditStats(object):
         if num <= 0:
             return ''
 
-        top_commenters = sorted(self.commenters.items(), reverse=True,
+        top_commenters = sorted(six.iteritems(self.commenters), reverse=True,
                                 key=lambda x: (sum(score(y) for y in x[1]),
                                                len(x[1])))[:num]
 
@@ -314,25 +315,27 @@ class SubRedditStats(object):
             num_submissions -= 1
 
         if len(body) > MAX_BODY_SIZE:
-            print 'The resulting message is too big. Not submitting.'
+            print('The resulting message is too big. Not submitting.')
             debug = True
 
         if not debug:
             msg = ('You are about to submit to subreddit %s as %s.\n'
                    'Are you sure? yes/[no]: ' % (subreddit,
                                                  str(self.reddit.user)))
-            if raw_input(msg).lower() not in ['y', 'yes']:
-                print 'Submission aborted'
+            sys.stdout.write(msg)
+            sys.stdout.flush()
+            if sys.stdin.readline().strip().lower() not in ['y', 'yes']:
+                print('Submission aborted')
             else:
                 try:
                     self.reddit.submit(subreddit, title, text=body)
                     return
-                except Exception, error:
-                    print 'The submission failed:', error
+                except Exception as error:
+                    print('The submission failed:' + str(error))
 
         # We made it here either to debug=True or an error.
-        print title
-        print body
+        print(title)
+        print(body)
 
 
 def main():
@@ -399,7 +402,7 @@ def main():
                                              after=options.after,
                                              exclude_self=options.no_self)
     if not found:
-        print 'No submissions were found.'
+        print('No submissions were found.')
         return 1
     srs.process_submitters()
     if options.commenters > 0:
