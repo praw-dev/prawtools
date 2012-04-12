@@ -8,7 +8,7 @@ from datetime import datetime
 from optparse import OptionGroup, OptionParser
 
 from reddit import Reddit
-from reddit.errors import ClientException
+from reddit.errors import ClientException, ExceptionList, RateLimitExceeded
 from reddit.objects import Comment
 
 DAYS_IN_SECONDS = 60 * 60 * 24
@@ -45,6 +45,27 @@ class SubRedditStats(object):
     @staticmethod
     def _user(user):
         return '[%s](/user/%s)' % (user.replace('_', '\_'), user)
+
+    @staticmethod
+    def _submit(func, *args, **kwargs):
+        def sleep(sleep_time):
+            print('\tSleeping for %d seconds' % sleep_time)
+            time.sleep(sleep_time)
+
+
+        while True:
+            try:
+                return func(*args, **kwargs)
+                break
+            except RateLimitExceeded as error:
+                sleep(error.sleep_time)
+            except ExceptionList as errors:
+                for error in errors:
+                    if isinstance(error, RateLimitExceeded):
+                        sleep(error.sleep_time)
+                        break
+                else:
+                    raise
 
     def __init__(self, subreddit, site, verbosity):
         self.reddit = Reddit(str(self), site)
@@ -328,7 +349,9 @@ class SubRedditStats(object):
                 print('Submission aborted')
             else:
                 try:
-                    self.reddit.submit(subreddit, title, text=body)
+                    res = self._submit(self.reddit.submit, subreddit, title,
+                                       text=body)
+                    print(res.permalink)
                     return
                 except Exception as error:
                     print('The submission failed:' + str(error))
