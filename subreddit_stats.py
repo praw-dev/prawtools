@@ -59,8 +59,8 @@ class SubRedditStats(object):
                 break
             except RateLimitExceeded as error:
                 sleep(error.sleep_time)
-            except ExceptionList as errors:
-                for error in errors:
+            except ExceptionList as exception_list:
+                for error in exception_list.errors:
                     if isinstance(error, RateLimitExceeded):
                         sleep(error.sleep_time)
                         break
