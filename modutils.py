@@ -6,10 +6,20 @@ from reddit import Reddit
 
 
 class ModUtils(object):
-    VERSION = '0.1.dev'
+    VERSION = '0.2'
 
-    def __init__(self, subreddit, site=None, verbose=None):
+    @staticmethod
+    def remove_entities(item):
+        if not item:
+            return item
+        return item.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;',
+                                                                       '>')
+    def __init__(self, subreddit, site=None, user=None, pswd=None,
+                 verbose=None):
         self.reddit = Reddit(str(self), site)
+        self._logged_in = False
+        self._user = user
+        self._pswd = pswd
         self.sub = self.reddit.get_subreddit(subreddit)
         self.verbose = verbose
         self._current_flair = None
@@ -25,7 +35,7 @@ class ModUtils(object):
         if category not in mapping:
             print '%r is not a valid option for --add' % category
             return
-
+        self.login()
         func = getattr(self.sub, mapping[category])
         print 'Enter user names (any separation should suffice):'
         data = sys.stdin.read().strip()
@@ -36,9 +46,12 @@ class ModUtils(object):
     def current_flair(self):
         if self._current_flair is None:
             self._current_flair = []
+            self.login()
             if self.verbose:
                 print 'Fetching flair list for %s' % self.sub
             for flair in self.sub.flair_list():
+                for item in ('flair_text', 'flair_css_class'):
+                    flair[item] = self.remove_entities(flair[item])
                 self._current_flair.append(flair)
                 yield flair
         else:
@@ -55,12 +68,20 @@ class ModUtils(object):
             raise Exception('Sort must be one of: %s' % ', '.join(sorts))
 
         # Build current flair list along with static values
+        counter = {}
         if static:
-            counter = dict((x, limit) for x in static)
-        else:
-            counter = {}
+            for key in static:
+                if use_css and use_text:
+                    parts = tuple(x.strip() for x in key.split(','))
+                    if len(parts) != 2:
+                        raise Exception('--static argument %r must have two '
+                                        'parts (comma separated) when using '
+                                        'both text and css.' % parts)
+                    key = parts
+                counter[key] = limit
+        self.login()
         if self.verbose:
-            sys.stdout.write('Retrieving current flair')
+            sys.stdout.write('Retrieving current flair\n')
             sys.stdout.flush()
         for flair in self.current_flair():
             if self.verbose:
@@ -102,17 +123,15 @@ class ModUtils(object):
                 print 'Adding template: text: "%s" css: "%s"' % (text, css)
             self.sub.add_flair_template(text, css, editable)
 
-    def login(self, user, pswd):
-        if self.verbose:
-            print 'Logging in'
-        self.reddit.login(user, pswd)
-        if self.verbose:
-            print 'Fetching moderator list for %s' % self.sub
-        if str(self.sub).lower() not in [str(x).lower() for x in
-                                         self.reddit.user.my_moderation()]:
-            raise Exception('You do not moderate %s' % self.sub)
+    def login(self):
+        if not self._logged_in:
+            if self.verbose:
+                print 'Logging in'
+            self.reddit.login(self._user, self._pswd)
+            self.logged_in = True
 
     def message(self, category, subject, msg_file):
+        self.login()
         users = getattr(self.sub, 'get_%s' % category)()
         if not users:
             print 'There are no %s on %s.' % (category, str(self.sub))
@@ -139,12 +158,14 @@ class ModUtils(object):
             print 'Sent to: %s' % str(user)
 
     def output_current_flair(self):
+        self.login()
         for flair in self.current_flair():
             print flair['user']
             print '  Text: %s\n   CSS: %s' % (flair['flair_text'],
                                               flair['flair_css_class'])
 
     def output_list(self, category):
+        self.login()
         print '%s users:' % category
         for user in getattr(self.sub, 'get_%s' % category)():
             print '  %s' % user
@@ -174,6 +195,8 @@ def main():
                  '`alpha` to add alphabetically, and `size` to first add '
                  'flair that is shared by the most number of users. '
                  'default: %default'),
+        'static': ('Add this template when syncing flair templates. When '
+                   'syncing text and css use a comma to separate the two.'),
         'subject': 'The subject of the message to send for --message.',
         'sync': 'Synchronize flair templates with current user flair.',
         'text': 'Ignore the text field when synchronizing flair.',
@@ -202,6 +225,7 @@ def main():
 
     group = OptionGroup(parser, 'Sync options')
     group.add_option('', '--sync', action='store_true', help=msg['sync'])
+    group.add_option('-S', '--static', action='append', help=msg['static'])
     group.add_option('', '--editable', action='store_true', help=msg['edit'])
     group.add_option('', '--ignore-css', action='store_false',
                      default=True, help=msg['css'])
@@ -221,8 +245,8 @@ def main():
         parser.error('Must provide --subject when providing --message.')
     subreddit = args[0]
 
-    modutils = ModUtils(subreddit, options.site, options.verbose)
-    modutils.login(options.user, options.pswd)
+    modutils = ModUtils(subreddit, options.site, options.user, options.pswd,
+                        options.verbose)
 
     if options.add:
         modutils.add_users(options.add)
@@ -233,7 +257,7 @@ def main():
     if options.sync:
         modutils.flair_template_sync(editable=options.editable,
                                      limit=options.limit,
-                                     static=None, sort=options.sort,
+                                     static=options.static, sort=options.sort,
                                      use_css=options.ignore_css,
                                      use_text=options.ignore_text)
     if options.message:
