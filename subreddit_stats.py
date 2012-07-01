@@ -9,7 +9,7 @@ from optparse import OptionGroup, OptionParser
 
 from praw import Reddit
 from praw.errors import ClientException, ExceptionList, RateLimitExceeded
-from praw.objects import Comment
+from praw.objects import Comment, Redditor
 
 DAYS_IN_SECONDS = 60 * 60 * 24
 MAX_BODY_SIZE = 10000
@@ -44,6 +44,10 @@ class SubRedditStats(object):
 
     @staticmethod
     def _user(user):
+        if user is None:
+            return '_deleted_'
+        elif isinstance(user, Redditor):
+            user = str(user)
         return '[%s](/user/%s)' % (user.replace('_', '\_'), user)
 
     @staticmethod
@@ -276,14 +280,13 @@ class SubRedditStats(object):
 
         retval = self.post_header % 'Top Submissions'
         for sub in top_submissions:
-            author = str(sub.author)
             title = sub.title.replace('\n', ' ').strip()
             if sub.permalink != sub.url:
                 retval += '0. [%s](%s)' % (title, sub.url)
             else:
                 retval += '0. %s' % title
             retval += ' by %s (%d pts, [%d comments](%s))\n' % (
-                self._user(author), sub.score, sub.num_comments,
+                self._user(sub.author), sub.score, sub.num_comments,
                 self._permalink(sub.permalink))
         return '%s\n' % retval
 
@@ -298,10 +301,9 @@ class SubRedditStats(object):
                                  key=score)[:num]
         retval = self.post_header % 'Top Comments'
         for comment in top_comments:
-            author = str(comment.author)
             title = comment.submission.title.replace('\n', ' ').strip()
             retval += ('0. %d pts: %s\'s [comment](%s) in %s\n'
-                       % (score(comment), self._user(author),
+                       % (score(comment), self._user(comment.author),
                           self._permalink(comment.permalink), title))
         return '%s\n' % retval
 
