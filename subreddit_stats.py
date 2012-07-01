@@ -131,7 +131,7 @@ class SubRedditStats(object):
             if submission.created_utc <= self.min_date:
                 break
             if (since_last and str(submission.author) == str(self.reddit.user)
-                submission.title.startswith(self.post_prefix)):
+                and submission.title.startswith(self.post_prefix)):
                 # Use info in this post to update the min_date
                 # And don't include this post
                 self.msg('Found previous: %s' % submission.title, 2)

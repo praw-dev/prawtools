@@ -4,7 +4,7 @@ from setuptools import setup
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 MODULE_FILE = os.path.join(HERE, 'subreddit_stats.py')
-README = open(os.path.join(HERE, 'README.md'))
+README = open(os.path.join(HERE, 'README.md')).read()
 VERSION = re.search("__version__ = '([^']+)'",
                     open(MODULE_FILE).read()).group(1)
 
@@ -19,8 +19,8 @@ setup(name=NAME,
       description=('A tool to calculate various submission and comment '
                    'statistics on reddit communities.'),
       long_description=README,
-      keywords = 'reddit subreddit statistics',
+      keywords='reddit subreddit statistics',
       classifiers=['Programming Language :: Python'],
       install_requires=['praw'],
       py_modules=[NAME],
-      entry_points = {'console_scripts': ['{0} = {0}:main'.format(NAME)]})
+      entry_points={'console_scripts': ['{0} = {0}:main'.format(NAME)]})
