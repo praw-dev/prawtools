@@ -131,11 +131,11 @@ class SubRedditStats(object):
             if submission.created_utc <= self.min_date:
                 break
             if (since_last and str(submission.author) == str(self.reddit.user)
-                and submission.title.startswith(self.post_prefix)):
+                submission.title.startswith(self.post_prefix)):
                 # Use info in this post to update the min_date
                 # And don't include this post
                 self.msg('Found previous: %s' % submission.title, 2)
-                if self.prev_srs == None:  # Only use the most recent
+                if self.prev_srs is None:  # Only use the most recent
                     self.min_date = max(self.min_date,
                                         self._previous_max(submission))
                     self.prev_srs = submission.permalink
@@ -298,7 +298,7 @@ class SubRedditStats(object):
             return ''
 
         top_comments = sorted(self.comments, reverse=True,
-                                 key=score)[:num]
+                              key=score)[:num]
         retval = self.post_header % 'Top Comments'
         for comment in top_comments:
             title = comment.submission.title.replace('\n', ' ').strip()
@@ -363,13 +363,12 @@ class SubRedditStats(object):
 
 def main():
     msg = {
-        'site': 'The site to connect to defined in your praw.cfg.',
+        'site': 'The site to connect to defined in your praw.ini file.',
         'user': ('The user to login as. If not specified the user (if any) '
                  'from the site config will be used, otherwise you will be '
                  'prompted for a username.'),
         'pswd': ('The password to use for login. Can only be used in '
-                 'combination with "--user". See help for "--user".'),
-        }
+                 'combination with "--user". See help for "--user".')}
 
     parser = OptionParser(usage='usage: %prog [options] subreddit')
     parser.add_option('-s', '--submitters', type='int', default=5,

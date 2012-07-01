@@ -8,8 +8,10 @@ README = open(os.path.join(HERE, 'README.md'))
 VERSION = re.search("__version__ = '([^']+)'",
                     open(MODULE_FILE).read()).group(1)
 
+NAME = 'subreddit_stats'
 
-setup(name='subreddit_stats',
+
+setup(name=NAME,
       version=VERSION,
       author='Bryce Boe',
       author_email='bbzbryce@gmail.com',
@@ -20,6 +22,5 @@ setup(name='subreddit_stats',
       keywords = 'reddit subreddit statistics',
       classifiers=['Programming Language :: Python'],
       install_requires=['praw'],
-      py_modules=['subreddit_stats'],
-      entry_points = {'console_scripts':
-                          ['subreddit_stats = subreddit_stats:main']})
+      py_modules=[NAME],
+      entry_points = {'console_scripts': ['{0} = {0}:main'.format(NAME)]})
