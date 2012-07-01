@@ -7,17 +7,17 @@ from collections import defaultdict
 from datetime import datetime
 from optparse import OptionGroup, OptionParser
 
-from reddit import Reddit
-from reddit.errors import ClientException, ExceptionList, RateLimitExceeded
-from reddit.objects import Comment
+from praw import Reddit
+from praw.errors import ClientException, ExceptionList, RateLimitExceeded
+from praw.objects import Comment
 
 DAYS_IN_SECONDS = 60 * 60 * 24
 MAX_BODY_SIZE = 10000
 
+__version__ = '0.3.0'
+
 
 class SubRedditStats(object):
-    VERSION = '0.2.0'
-
     post_prefix = 'Subreddit Stats:'
     post_header = '---\n###%s\n'
     post_footer = ('>Generated with [BBoe](/user/bboe)\'s [Subreddit Stats]'
@@ -52,11 +52,9 @@ class SubRedditStats(object):
             print('\tSleeping for %d seconds' % sleep_time)
             time.sleep(sleep_time)
 
-
         while True:
             try:
                 return func(*args, **kwargs)
-                break
             except RateLimitExceeded as error:
                 sleep(error.sleep_time)
             except ExceptionList as exception_list:
@@ -83,7 +81,7 @@ class SubRedditStats(object):
         self.reddit.config.comment_sort = 'top'
 
     def __str__(self):
-        return 'BBoe\'s SubRedditStats %s' % self.VERSION
+        return 'BBoe\'s Subreddit Stats %s' % __version__
 
     def login(self, user, pswd):
         if self.verbosity > 0:
@@ -363,7 +361,7 @@ class SubRedditStats(object):
 
 def main():
     msg = {
-        'site': 'The site to connect to defined in your reddit_api.cfg.',
+        'site': 'The site to connect to defined in your praw.cfg.',
         'user': ('The user to login as. If not specified the user (if any) '
                  'from the site config will be used, otherwise you will be '
                  'prompted for a username.'),
