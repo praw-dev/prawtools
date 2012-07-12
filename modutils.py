@@ -2,7 +2,7 @@
 import re
 import sys
 from optparse import OptionGroup, OptionParser
-from reddit import Reddit
+from praw import Reddit
 
 
 class ModUtils(object):
