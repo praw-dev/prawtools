@@ -21,7 +21,7 @@ class SubRedditStats(object):
     post_prefix = 'Subreddit Stats:'
     post_header = '---\n###%s\n'
     post_footer = ('>Generated with [BBoe](/user/bboe)\'s [Subreddit Stats]'
-                   '(https://github.com/bboe/subreddit_stats)  \n%s'
+                   '(https://github.com/praw-dev/subreddit_stats)  \n%s'
                    'SRS Marker: %d')
     re_marker = re.compile('SRS Marker: (\d+)')
 
