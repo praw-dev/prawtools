@@ -5,23 +5,20 @@ import sys
 import time
 from collections import defaultdict
 from datetime import datetime
-from optparse import OptionGroup, OptionParser
-
 from praw import Reddit
-from praw.errors import ClientException, ExceptionList, RateLimitExceeded
-from praw.objects import Comment, Redditor
+from praw.errors import ExceptionList, RateLimitExceeded
+from praw.objects import Redditor
+from .helpers import arg_parser
 
 DAYS_IN_SECONDS = 60 * 60 * 24
 MAX_BODY_SIZE = 10000
-
-__version__ = '0.3.0'
 
 
 class SubRedditStats(object):
     post_prefix = 'Subreddit Stats:'
     post_header = '---\n###%s\n'
     post_footer = ('>Generated with [BBoe](/user/bboe)\'s [Subreddit Stats]'
-                   '(https://github.com/praw-dev/subreddit_stats)  \n%s'
+                   '(https://github.com/praw-dev/prawtools)  \n%s'
                    'SRS Marker: %d')
     re_marker = re.compile('SRS Marker: (\d+)')
 
@@ -83,9 +80,6 @@ class SubRedditStats(object):
         # Config
         self.reddit.config.comment_limit = -1  # Fetch max comments possible
         self.reddit.config.comment_sort = 'top'
-
-    def __str__(self):
-        return 'BBoe\'s Subreddit Stats %s' % __version__
 
     def login(self, user, pswd):
         if self.verbosity > 0:
@@ -362,15 +356,7 @@ class SubRedditStats(object):
 
 
 def main():
-    msg = {
-        'site': 'The site to connect to defined in your praw.ini file.',
-        'user': ('The user to login as. If not specified the user (if any) '
-                 'from the site config will be used, otherwise you will be '
-                 'prompted for a username.'),
-        'pswd': ('The password to use for login. Can only be used in '
-                 'combination with "--user". See help for "--user".')}
-
-    parser = OptionParser(usage='usage: %prog [options] subreddit')
+    parser = arg_parser(usage='usage: %prog [options] subreddit')
     parser.add_option('-s', '--submitters', type='int', default=5,
                       help='Number of top submitters to display '
                       '[default %default]')
@@ -382,8 +368,6 @@ def main():
     parser.add_option('-d', '--days', type='int', default=32,
                       help=('Number of previous days to include submissions '
                             'from. Use 0 for unlimited. Default: %default'))
-    parser.add_option('-v', '--verbose', action='count', default=0,
-                      help='Increase the verbosity by 1')
     parser.add_option('-D', '--debug', action='store_true',
                       help='Enable debugging mode. Does not post stats.')
     parser.add_option('-R', '--submission-reddit',
@@ -397,12 +381,6 @@ def main():
                             ' the calculation. '))
     parser.add_option('', '--prev',
                       help='Statically provide the URL of previous SRS page.')
-
-    group = OptionGroup(parser, 'Site/Authentication options')
-    group.add_option('-S', '--site', help=msg['site'])
-    group.add_option('-u', '--user', help=msg['user'])
-    group.add_option('-p', '--pswd', help=msg['pswd'])
-    parser.add_option_group(group)
 
     options, args = parser.parse_args()
     if len(args) != 1:
@@ -431,7 +409,3 @@ def main():
         srs.process_commenters()
     srs.publish_results(submission_reddit, options.submitters,
                         options.commenters, 5, 5, options.top, options.debug)
-
-
-if __name__ == '__main__':
-    sys.exit(main())

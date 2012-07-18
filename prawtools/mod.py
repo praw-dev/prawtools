@@ -1,13 +1,11 @@
-#!/usr/bin/env python
 import re
 import sys
-from optparse import OptionGroup, OptionParser
+from optparse import OptionGroup
 from praw import Reddit
+from .helpers import arg_parser
 
 
 class ModUtils(object):
-    VERSION = '0.2'
-
     @staticmethod
     def remove_entities(item):
         if not item:
@@ -24,9 +22,6 @@ class ModUtils(object):
         self.sub = self.reddit.get_subreddit(subreddit)
         self.verbose = verbose
         self._current_flair = None
-
-    def __str__(self):
-        return 'BBoe\'s ModUtils %s' % self.VERSION
 
     def add_users(self, category):
         mapping = {'banned': 'ban',
@@ -189,9 +184,6 @@ def main():
         'msg': ('Send message to users of one of the following categories: '
                 '%s. Message subject provided via --subject, content provided '
                 'via --file or STDIN.') % mod_choices_dsp,
-        'pswd': ('The password to use for login. Can only be used in '
-                 'combination with "--user". See help for "--user".'),
-        'site': 'The site to connect to defined in your reddit_api.cfg.',
         'sort': ('The order to add flair templates. Available options are '
                  '`alpha` to add alphabetically, and `size` to first add '
                  'flair that is shared by the most number of users. '
@@ -200,33 +192,21 @@ def main():
                    'syncing text and css use a comma to separate the two.'),
         'subject': 'The subject of the message to send for --message.',
         'sync': 'Synchronize flair templates with current user flair.',
-        'text': 'Ignore the text field when synchronizing flair.',
-        'user': ('The user to login as. If not specified the user (if any) '
-                 'from the site config will be used, otherwise you will be '
-                 'prompted for a username.'),
-        'v': 'Display output for each web request.',
-        }
+        'text': 'Ignore the text field when synchronizing flair.'}
 
     usage = 'Usage: %prog [options] SUBREDDIT'
-    parser = OptionParser(usage=usage, version='%%prog %s' % ModUtils.VERSION)
+    parser = arg_parser(usage=usage)
     parser.add_option('-a', '--add', help=msg['add']),
     parser.add_option('-l', '--list', action='append', help=msg['list'],
                       choices=mod_choices, metavar='CATEGORY', default=[])
     parser.add_option('-F', '--file', help=msg['file'])
     parser.add_option('-f', '--flair', action='store_true', help=msg['flair'])
-    parser.add_option('-v', '--verbose', action='store_true', help=msg['v'])
     parser.add_option('-m', '--message', choices=mod_choices, help=msg['msg'])
     parser.add_option('', '--subject', help=msg['subject'])
 
-    group = OptionGroup(parser, 'Site/Authentication options')
-    group.add_option('-s', '--site', help=msg['site'])
-    group.add_option('-u', '--user', help=msg['user'])
-    group.add_option('-p', '--pswd', help=msg['pswd'])
-    parser.add_option_group(group)
-
     group = OptionGroup(parser, 'Sync options')
     group.add_option('', '--sync', action='store_true', help=msg['sync'])
-    group.add_option('-S', '--static', action='append', help=msg['static'])
+    group.add_option('-s', '--static', action='append', help=msg['static'])
     group.add_option('', '--editable', action='store_true', help=msg['edit'])
     group.add_option('', '--ignore-css', action='store_false',
                      default=True, help=msg['css'])
@@ -263,6 +243,3 @@ def main():
                                      use_text=options.ignore_text)
     if options.message:
         modutils.message(options.message, options.subject, options.file)
-
-if __name__ == '__main__':
-    sys.exit(main())
