@@ -1,5 +1,6 @@
 import re
 import sys
+from collections import Counter
 from optparse import OptionGroup
 from praw import Reddit
 from .helpers import arg_parser
@@ -154,11 +155,29 @@ class ModUtils(object):
             print 'Sent to: %s' % str(user)
 
     def output_current_flair(self):
-        self.login()
         for flair in self.current_flair():
             print flair['user']
             print '  Text: %s\n   CSS: %s' % (flair['flair_text'],
                                               flair['flair_css_class'])
+
+    def output_flair_stats(self):
+        css_counter = Counter()
+        text_counter = Counter()
+        for flair in self.current_flair():
+            if flair['flair_css_class']:
+                css_counter[flair['flair_css_class']] += 1
+            if flair['flair_text']:
+                text_counter[flair['flair_text']] += 1
+
+        print 'Flair CSS Statistics'
+        for flair, count in sorted(css_counter.items(),
+                                   key=lambda x: (x[1], x[0])):
+            print '{0:3} {1}'.format(count, flair)
+
+        print 'Flair Text Statistics'
+        for flair, count in sorted(text_counter.items(),
+                                   key=lambda x: (x[1], x[0]), reverse=True):
+            print '{0:3} {1}'.format(count, flair)
 
     def output_list(self, category):
         self.login()
@@ -177,6 +196,7 @@ def main():
         'edit': 'When adding flair templates, mark them as editable.',
         'file': 'The file containing contents for --message',
         'flair': 'List flair for the subreddit.',
+        'flair_stats': 'Display the number of users with each flair.',
         'limit': ('The minimum number of users that must have the specified '
                   'flair in order to add as a template. default: %default'),
         'list': ('List the users in one of the following categories: '
@@ -201,6 +221,8 @@ def main():
                       choices=mod_choices, metavar='CATEGORY', default=[])
     parser.add_option('-F', '--file', help=msg['file'])
     parser.add_option('-f', '--flair', action='store_true', help=msg['flair'])
+    parser.add_option('', '--flair-stats', action='store_true',
+                      help=msg['flair_stats'])
     parser.add_option('-m', '--message', choices=mod_choices, help=msg['msg'])
     parser.add_option('', '--subject', help=msg['subject'])
 
@@ -208,10 +230,10 @@ def main():
     group.add_option('', '--sync', action='store_true', help=msg['sync'])
     group.add_option('-s', '--static', action='append', help=msg['static'])
     group.add_option('', '--editable', action='store_true', help=msg['edit'])
-    group.add_option('', '--ignore-css', action='store_false',
-                     default=True, help=msg['css'])
-    group.add_option('', '--ignore-text', action='store_false',
-                     default=True, help=msg['text'])
+    group.add_option('', '--ignore-css', action='store_true',
+                     default=False, help=msg['css'])
+    group.add_option('', '--ignore-text', action='store_true',
+                     default=False, help=msg['text'])
     group.add_option('', '--limit', type='int', help=msg['limit'], default=2)
     group.add_option('', '--sort', action='store', choices=('alpha', 'size'),
                      default='alpha', help=msg['sort'])
@@ -235,11 +257,13 @@ def main():
         modutils.output_list(category)
     if options.flair:
         modutils.output_current_flair()
+    if options.flair_stats:
+        modutils.output_flair_stats()
     if options.sync:
         modutils.flair_template_sync(editable=options.editable,
                                      limit=options.limit,
                                      static=options.static, sort=options.sort,
-                                     use_css=options.ignore_css,
-                                     use_text=options.ignore_text)
+                                     use_css=not options.ignore_css,
+                                     use_text=not options.ignore_text)
     if options.message:
         modutils.message(options.message, options.subject, options.file)

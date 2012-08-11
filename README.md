@@ -28,7 +28,6 @@ flair templates from existing user flair, however, it can also be used to
 quickly list banned users, contributors, and moderators.
 
 ### modutils examples
----
 
 Note: all examples require you to be a moderator for the subreddit
 
