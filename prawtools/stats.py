@@ -14,6 +14,13 @@ DAYS_IN_SECONDS = 60 * 60 * 24
 MAX_BODY_SIZE = 10000
 
 
+def safe_title(submission):
+    retval = submission.title.replace('\n', ' ').strip()
+    if not six.PY3:
+        retval = retval.encode('utf-8')
+    return retval
+
+
 class SubRedditStats(object):
     post_prefix = 'Subreddit Stats:'
     post_header = '---\n###{0}\n'
@@ -128,7 +135,8 @@ class SubRedditStats(object):
                 and submission.title.startswith(self.post_prefix)):
                 # Use info in this post to update the min_date
                 # And don't include this post
-                self.msg('Found previous: {0}'.format(submission.title), 2)
+                self.msg('Found previous: {0}'.format(safe_title(submission)),
+                         2)
                 if self.prev_srs is None:  # Only use the most recent
                     self.min_date = max(self.min_date,
                                         self._previous_max(submission))
@@ -245,7 +253,7 @@ class SubRedditStats(object):
                 self._user(author))
             for sub in sorted(submissions, reverse=True,
                               key=lambda x: x.score)[:num_submissions]:
-                title = sub.title.replace('\n', ' ').strip()
+                title = safe_title(sub)
                 if sub.permalink != sub.url:
                     retval += '  0. [{0}]({1})'.format(title, sub.url)
                 else:
@@ -284,7 +292,7 @@ class SubRedditStats(object):
 
         retval = self.post_header.format('Top Submissions')
         for sub in top_submissions:
-            title = sub.title.replace('\n', ' ').strip()
+            title = safe_title(sub)
             if sub.permalink != sub.url:
                 retval += '0. [{0}]({1})'.format(title, sub.url)
             else:
@@ -305,7 +313,7 @@ class SubRedditStats(object):
                               key=score)[:num]
         retval = self.post_header.format('Top Comments')
         for comment in top_comments:
-            title = comment.submission.title.replace('\n', ' ').strip()
+            title = safe_title(comment.submission)
             retval += ('0. {0} pts: {1}\'s [comment]({2}) in {3}\n'.format(
                     score(comment), self._user(comment.author),
                     self._permalink(comment.permalink), title))
