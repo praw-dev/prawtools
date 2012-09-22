@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import re
-import six
 import sys
 import time
 from collections import defaultdict
@@ -8,6 +7,7 @@ from datetime import datetime
 from praw import Reddit
 from praw.errors import ExceptionList, RateLimitExceeded
 from praw.objects import Redditor
+from six import iteritems, itervalues, text_type as tt
 from .helpers import arg_parser
 
 DAYS_IN_SECONDS = 60 * 60 * 24
@@ -15,18 +15,15 @@ MAX_BODY_SIZE = 10000
 
 
 def safe_title(submission):
-    retval = submission.title.replace('\n', ' ').strip()
-    if not six.PY3:
-        retval = retval.encode('utf-8')
-    return retval
+    return submission.title.replace('\n', ' ').strip()
 
 
 class SubRedditStats(object):
-    post_prefix = 'Subreddit Stats:'
-    post_header = '---\n###{0}\n'
-    post_footer = ('>Generated with [BBoe](/u/bboe)\'s [Subreddit Stats]'
-                   '(https://github.com/praw-dev/prawtools)  \n{0}'
-                   'SRS Marker: {1}')
+    post_prefix = tt('Subreddit Stats:')
+    post_header = tt('---\n###{0}\n')
+    post_footer = tt('>Generated with [BBoe](/u/bboe)\'s [Subreddit Stats]'
+                     '(https://github.com/praw-dev/prawtools)  \n{0}'
+                     'SRS Marker: {1}')
     re_marker = re.compile('SRS Marker: (\d+)')
 
     @staticmethod
@@ -42,9 +39,10 @@ class SubRedditStats(object):
     def _permalink(permalink):
         tokens = permalink.split('/')
         if tokens[8] == '':  # submission
-            return '/comments/{0}/_/'.format(tokens[6])
+            return tt('/comments/{0}/_/').format(tokens[6])
         else:  # comment
-            return '/comments/{0}/_/{1}?context=1'.format(tokens[6], tokens[8])
+            return tt('/comments/{0}/_/{1}?context=1').format(tokens[6],
+                                                              tokens[8])
 
     @staticmethod
     def _user(user):
@@ -52,7 +50,7 @@ class SubRedditStats(object):
             return '_deleted_'
         elif isinstance(user, Redditor):
             user = str(user)
-        return '[{0}](/user/{1})'.format(user.replace('_', '\_'), user)
+        return tt('[{0}](/user/{1})').format(user.replace('_', '\_'), user)
 
     @staticmethod
     def _submit(func, *args, **kwargs):
@@ -135,8 +133,8 @@ class SubRedditStats(object):
                 and submission.title.startswith(self.post_prefix)):
                 # Use info in this post to update the min_date
                 # And don't include this post
-                self.msg('Found previous: {0}'.format(safe_title(submission)),
-                         2)
+                self.msg(tt('Found previous: {0}')
+                         .format(safe_title(submission)), 2)
                 if self.prev_srs is None:  # Only use the most recent
                     self.min_date = max(self.min_date,
                                         self._previous_max(submission))
@@ -203,7 +201,7 @@ class SubRedditStats(object):
             except Exception as exception:
                 print('Exception fetching comments on {0!r}: {1}'.format(
                         submission.content_id, str(exception)))
-            for orphans in six.itervalues(submission._orphaned):
+            for orphans in itervalues(submission._orphaned):
                 self.comments.extend(orphans)
         for comment in self.comments:
             if comment.author:
@@ -242,7 +240,7 @@ class SubRedditStats(object):
         if num <= 0:
             return ''
 
-        top_submitters = sorted(six.iteritems(self.submitters), reverse=True,
+        top_submitters = sorted(iteritems(self.submitters), reverse=True,
                                 key=lambda x: (sum(y.score for y in x[1]),
                                                len(x[1])))[:num]
 
@@ -255,9 +253,9 @@ class SubRedditStats(object):
                               key=lambda x: x.score)[:num_submissions]:
                 title = safe_title(sub)
                 if sub.permalink != sub.url:
-                    retval += '  0. [{0}]({1})'.format(title, sub.url)
+                    retval += tt('  0. [{0}]({1})').format(title, sub.url)
                 else:
-                    retval += '  0. {0}'.format(title)
+                    retval += tt('  0. {0}').format(title)
                 retval += ' ({0} pts, [{1} comments]({2}))\n'.format(
                     sub.score, sub.num_comments,
                     self._permalink(sub.permalink))
@@ -271,7 +269,7 @@ class SubRedditStats(object):
         if num <= 0:
             return ''
 
-        top_commenters = sorted(six.iteritems(self.commenters), reverse=True,
+        top_commenters = sorted(iteritems(self.commenters), reverse=True,
                                 key=lambda x: (sum(score(y) for y in x[1]),
                                                len(x[1])))[:num]
 
@@ -294,13 +292,13 @@ class SubRedditStats(object):
         for sub in top_submissions:
             title = safe_title(sub)
             if sub.permalink != sub.url:
-                retval += '0. [{0}]({1})'.format(title, sub.url)
+                retval += tt('0. [{0}]({1})').format(title, sub.url)
             else:
-                retval += '0. {0}'.format(title)
+                retval += tt('0. {0}').format(title)
             retval += ' by {0} ({1} pts, [{2} comments]({3}))\n'.format(
                 self._user(sub.author), sub.score, sub.num_comments,
                 self._permalink(sub.permalink))
-        return '{0}\n'.format(retval)
+        return tt('{0}\n').format(retval)
 
     def top_comments(self, num):
         score = lambda x: x.ups - x.downs
@@ -314,10 +312,10 @@ class SubRedditStats(object):
         retval = self.post_header.format('Top Comments')
         for comment in top_comments:
             title = safe_title(comment.submission)
-            retval += ('0. {0} pts: {1}\'s [comment]({2}) in {3}\n'.format(
-                    score(comment), self._user(comment.author),
-                    self._permalink(comment.permalink), title))
-        return '{0}\n'.format(retval)
+            retval += tt('0. {0} pts: {1}\'s [comment]({2}) in {3}\n').format(
+                score(comment), self._user(comment.author),
+                self._permalink(comment.permalink), title)
+        return tt('{0}\n').format(retval)
 
     def publish_results(self, subreddit, submitters, commenters, submissions,
                         comments, top, debug=False):
@@ -352,6 +350,12 @@ class SubRedditStats(object):
             print('The resulting message is too big. Not submitting.')
             debug = True
 
+        # Set the initial title
+        base_title = '{0} {1} {2}posts from {3} to {4}'.format(
+            self.post_prefix, str(self.subreddit),
+            'top ' if top else '', timef(self.min_date, True),
+            timef(self.max_date))
+
         submitted = False
         while not debug and not submitted:
             if subreddit:  # Verify the user wants to submit to the subreddit
@@ -372,17 +376,15 @@ class SubRedditStats(object):
                     print('Submission aborted\n')
                     debug = True
 
+            # Vary the title depending on where posting
+            if str(self.subreddit) == subreddit:
+                title = '{0} {1}posts from {2} to {3}'.format(
+                    self.post_prefix, 'top ' if top else '',
+                    timef(self.min_date, True), timef(self.max_date))
+            else:
+                title = base_title
+
             if subreddit:
-                # Vary the title depending on where posting
-                if str(self.subreddit) == subreddit:
-                    title = '{0} {1}posts from {2} to {3}'.format(
-                        self.post_prefix, 'top ' if top else '',
-                        timef(self.min_date, True), timef(self.max_date))
-                else:
-                    title = '{0} {1} {2}posts from {3} to {4}'.format(
-                        self.post_prefix, str(self.subreddit),
-                        'top ' if top else '', timef(self.min_date, True),
-                        timef(self.max_date))
                 # Attempt to make the submission
                 try:
                     res = self._submit(self.reddit.submit, subreddit, title,
@@ -390,11 +392,12 @@ class SubRedditStats(object):
                     print(res.permalink)
                     submitted = True
                 except Exception as error:
+                    raise
                     print('The submission failed:' + str(error))
                     subreddit = None
 
         if not submitted:
-            print(title)
+            print(base_title)
             print(body)
 
 
