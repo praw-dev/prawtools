@@ -14,6 +14,11 @@ Reddit API Wrapper (PRAW). PRAWtools is currently made up of two utillities:
     sudo easy_install pip
     sudo pip install prawtools
 
+### Arch Linux installation
+    sudo pacman -S python-pip
+    sudo easy_install pip
+    sudo pip install prawtools
+
 ### Mac OS X installation (only tested with Lion)
 
     sudo easy_install pip
