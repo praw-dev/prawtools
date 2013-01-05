@@ -121,10 +121,10 @@ class SubRedditStats(object):
         '''
         if max_duration:
             self.min_date = self.max_date - DAYS_IN_SECONDS * max_duration
-        url_data = {'after': after} if after else None
+        params = {'after': after} if after else None
         self.msg('DEBUG: Fetching submissions', 1)
         for submission in self.subreddit.get_new_by_date(limit=None,
-                                                         url_data=url_data):
+                                                         params=params):
             if submission.created_utc > self.max_date:
                 continue
             if submission.created_utc <= self.min_date:
@@ -164,9 +164,8 @@ class SubRedditStats(object):
         if top not in ('day', 'week', 'month', 'year', 'all'):
             raise TypeError('{0!r} is not a valid top value'.format(top))
         self.msg('DEBUG: Fetching submissions', 1)
-        url_data = {'t': top}
-        for submission in self.subreddit.get_top(limit=None,
-                                                 url_data=url_data):
+        params = {'t': top}
+        for submission in self.subreddit.get_top(limit=None, params=params):
             if exclude_self and submission.is_self:
                 continue
             self.submissions.append(submission)

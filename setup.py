@@ -26,10 +26,14 @@ setup(name=PACKAGE_NAME,
                    'Operating System :: OS Independent',
                    'Programming Language :: Python :: 2.6',
                    'Programming Language :: Python :: 2.7',
-                   #'Programming Language :: Python :: 3.2',
+                   'Programming Language :: Python :: 3',
+                   'Programming Language :: Python :: 3.1',
+                   'Programming Language :: Python :: 3.2',
+                   'Programming Language :: Python :: 3.3',
                    'Topic :: Utilities'],
-      install_requires=['praw'],
+      install_requires=['praw>=1.1a'],
       packages=[PACKAGE_NAME],
       entry_points={'console_scripts':
                         ['subreddit_stats = prawtools.stats:main',
-                         'modutils = prawtools.mod:main']})
+                         'modutils = prawtools.mod:main']},
+      test_suite='tests')
