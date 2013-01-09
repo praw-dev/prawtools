@@ -199,7 +199,7 @@ class SubRedditStats(object):
                 self.comments.extend(submission.all_comments_flat)
             except Exception as exception:
                 print('Exception fetching comments on {0!r}: {1}'.format(
-                        submission.content_id, str(exception)))
+                        submission.fullname, str(exception)))
             for orphans in itervalues(submission._orphaned):
                 self.comments.extend(orphans)
         for comment in self.comments:
