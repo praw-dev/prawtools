@@ -36,7 +36,7 @@ class ModUtils(object):
         func = getattr(self.sub, mapping[category])
         print 'Enter user names (any separation should suffice):'
         data = sys.stdin.read().strip()
-        for name in re.split('[^A-Za-z_]+', data):
+        for name in re.split('[^A-Za-z0-9_]+', data):
             func(name)
             print 'Added %r to %s' % (name, category)
 
