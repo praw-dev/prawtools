@@ -46,7 +46,7 @@ class ModUtils(object):
             self.login()
             if self.verbose:
                 print 'Fetching flair list for %s' % self.sub
-            for flair in self.sub.flair_list():
+            for flair in self.sub.get_flair_list():
                 for item in ('flair_text', 'flair_css_class'):
                     flair[item] = self.remove_entities(flair[item])
                 self._current_flair.append(flair)
@@ -151,7 +151,7 @@ class ModUtils(object):
             print 'Message sending aborted.'
             return
         for user in users:
-            user.compose_message(subject, msg)
+            user.send_message(subject, msg)
             print 'Sent to: %s' % str(user)
 
     def output_current_flair(self):

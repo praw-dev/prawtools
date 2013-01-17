@@ -31,7 +31,7 @@ setup(name=PACKAGE_NAME,
                    'Programming Language :: Python :: 3.2',
                    'Programming Language :: Python :: 3.3',
                    'Topic :: Utilities'],
-      install_requires=['praw>=1.1a'],
+      install_requires=['praw>=2.0'],
       packages=[PACKAGE_NAME],
       entry_points={'console_scripts':
                         ['subreddit_stats = prawtools.stats:main',

@@ -6,6 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 from praw import Reddit
 from praw.errors import ExceptionList, RateLimitExceeded
+from praw.helpers import flatten_tree
 from praw.objects import Redditor
 from six import iteritems, itervalues, text_type as tt
 from .helpers import arg_parser
@@ -82,9 +83,6 @@ class SubRedditStats(object):
         self.min_date = 0
         self.max_date = time.time() - DAYS_IN_SECONDS * 3
         self.prev_srs = None
-        # Config
-        self.reddit.config.comment_limit = -1  # Fetch max comments possible
-        self.reddit.config.comment_sort = 'top'
 
     def login(self, user, pswd):
         if self.verbosity > 0:
@@ -191,15 +189,23 @@ class SubRedditStats(object):
         self.msg('DEBUG: Processing Commenters on {0} submissions'.format(num),
                  1)
         for i, submission in enumerate(self.submissions):
+            # Explicitly fetch as many comments as possible by top sort
+            # Note that this is the first time the complete submission object
+            # is obtained. Only a partial object was returned when getting the
+            # subreddit listings.
+            submission = self.reddit.get_submission(submission.permalink,
+                                                    comment_limit=None,
+                                                    comment_sort='top')
             self.msg('{0}/{1} submissions'.format(i + 1, num), 2,
                      overwrite=True)
             if submission.num_comments == 0:
                 continue
-            try:
-                self.comments.extend(submission.all_comments_flat)
-            except Exception as exception:
-                print('Exception fetching comments on {0!r}: {1}'.format(
-                        submission.fullname, str(exception)))
+            skipped = submission.replace_more_comments()
+            if skipped:
+                num = sum(x.count for x in skipped)
+                print('Ignored {0} comments ({1} MoreComment objects)'
+                      .format(num, len(skipped)))
+            self.comments.extend(flatten_tree(submission.comments))
             for orphans in itervalues(submission._orphaned):
                 self.comments.extend(orphans)
         for comment in self.comments:
