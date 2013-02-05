@@ -1,3 +1,56 @@
+# Documentation for wtchen's fork of BBOE's PRAWtools
+
+## Beginner help
+
+Run tests.py to test. Do not execute stats.py or mod.py directly. This is due to package.
+
+To manually install PRAWtools, run ``setup.py install``
+
+## Manual
+
+This is for my fork *only*, and may not work on bboe's package or any other forks.
+
+    Usage: subreddit_stats [options] subreddit
+    
+    Options:
+      --version             show program's version number and exit
+      -h, --help            show this help message and exit
+      -v, --verbose         Increase the verbosity by 1 each time
+      -s SUBMITTERS, --submitters=SUBMITTERS
+                            Number of top submitters to display [default 5]
+      -c COMMENTERS, --commenters=COMMENTERS
+                            Number of top commenters to display [default 10]
+      -a AFTER, --after=AFTER
+                            Submission ID to fetch after
+      -d DAYS, --days=DAYS  Number of previous days to include submissions from.
+                            Use 0 for unlimited. Default: 32
+      -D, --debug           Enable debugging mode. Does not post stats.
+      -R SUBMISSION_REDDIT, --submission-reddit=SUBMISSION_REDDIT
+                            Subreddit to submit to. If not present, submits to the
+                            subreddit processed
+      -t TOP, --top=TOP     Run on top submissions either by day, week, month,
+                            year, or all
+      --no-self             Do not include self posts (and their comments) in the
+                            calculation.
+      --self-only           Only include self posts (and their comments) in the
+                            calculation
+      --prev=PREV           Statically provide the URL of previous SRS page.
+      --include-prev        Don't try to avoid overlap with a previous SRS.
+    
+      Site/Authentication options:
+        -S SITE, --site=SITE
+                            The site to connect to defined in your praw.ini file.
+        -u USER, --user=USER
+                            The user to login as. If not specified the user (if
+                            any) from the site config will be used, otherwise you
+                            will be prompted for a username.
+        -p PSWD, --pswd=PSWD
+                            The password to use for login. Can only be used in
+                            combination with "--user". See help for "--user".
+    
+
+----
+
 # BBOE's PRAWtools
 
 PRAWtools is a collection of tools that utilize reddit's API through the Python
