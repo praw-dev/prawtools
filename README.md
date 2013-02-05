@@ -1,14 +1,18 @@
 # Documentation for wtchen's fork of BBOE's PRAWtools
 
-## Beginner help
+## Setup
 
-Run tests.py to test. Do not execute stats.py or mod.py directly. This is due to package.
+It is necessary to have the praw library. To obtain it, run ``pip install praw``.
 
 To manually install PRAWtools, run ``setup.py install``
 
+## Beginner help
+
+Run tests.py to test. Do not execute stats.py or mod.py directly. This is due to the program's packaging as well as other issues related to testing (why make it harder for yourself?).
+
 ## Manual
 
-This is for my fork *only*, and may not work on bboe's package or any other forks.
+This is for my fork *only*, and may not work on bboe's version or other forks.
 
     Usage: subreddit_stats [options] subreddit
     
