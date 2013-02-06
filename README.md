@@ -52,6 +52,12 @@ This is for my fork *only*, and may not work on bboe's version or other forks.
                             The password to use for login. Can only be used in
                             combination with "--user". See help for "--user".
     
+## Development to-do (future features)
+
+* Subreddit Stats: Ability to sort by most downvoted (hard)
+* Subreddit Stats: Dump of stats into a text or markdown file
+* New tools such as activity monitors 
+* Do a pull request to bboe's project OR develop this separately if my code ends up looking way different.
 
 ----
 
