@@ -134,11 +134,11 @@ class SubRedditStats(object):
                   # And don't include this post
                   self.msg(tt('Found previous: {0}')
                          .format(safe_title(submission)), 2)
-                  if self.prev_srs is None:  # Only use the most recent
-                      self.min_date = max(self.min_date,
-                                          self._previous_max(submission))
-                      self.prev_srs = submission.permalink
-                  continue
+            if self.prev_srs is None:  # Only use the most recent
+                self.min_date = max(self.min_date,
+                                    self._previous_max(submission))
+                self.prev_srs = submission.permalink
+                continue
             if exclude_self and submission.is_self:
                 continue
             if exclude_link and not submission.is_self:
@@ -450,7 +450,7 @@ def main():
 
     if options.no_link and options.no_self:
         parser.error('You are choosing to exclude self posts but also only include self posts.'
-                        ' Consider checking your arguments.')
+                     ' Consider checking your arguments.')
 
     if options.submission_reddit:
         submission_reddit = options.submission_reddit
