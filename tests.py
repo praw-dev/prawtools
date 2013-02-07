@@ -7,7 +7,10 @@ class StatsTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_recent(self):
         srs = SubRedditStats('redditdev', None, None)
         self.assertTrue(
-            srs.fetch_recent_submissions(7, None, None, None))
+            srs.fetch_recent_submissions(max_duration=7,
+                                         after=None,
+                                         exclude_self=False,
+                                         exclude_link=False))
         self.assertTrue(len(srs.submissions) > 1)
         prev = 0
         for submission in srs.submissions:

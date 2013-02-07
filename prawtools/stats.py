@@ -103,7 +103,7 @@ class SubRedditStats(object):
         self.min_date = self._previous_max(submission)
         self.prev_srs = prev_url
 
-    def fetch_recent_submissions(self, max_duration, after, exclude_self, 
+    def fetch_recent_submissions(self, max_duration, after, exclude_self,
                                  exclude_link, since_last=True):
         '''Fetches recent submissions in subreddit with boundaries.
 
@@ -436,8 +436,8 @@ def main():
                       help=('Do not include self posts (and their comments) in'
                             ' the calculation.'))
     parser.add_option('', '--no-link', action='store_true',
-                      help=('Only include self posts (and their comments) in the'
-                            ' calculation.'))
+                      help=('Only include self posts (and their comments) in '
+                            'the calculation.'))
     parser.add_option('', '--prev',
                       help='Statically provide the URL of previous SRS page.')
     parser.add_option('', '--include-prev', action='store_true',
@@ -448,8 +448,8 @@ def main():
         parser.error('Must provide subreddit')
 
     if options.no_link and options.no_self:
-        parser.error('You are choosing to exclude self posts but also only include self posts.'
-                     ' Consider checking your arguments.')
+        parser.error('You are choosing to exclude self posts but also only '
+                     'include self posts. Consider checking your arguments.')
 
     if options.submission_reddit:
         submission_reddit = options.submission_reddit
@@ -461,7 +461,8 @@ def main():
     if options.prev:
         srs.prev_stat(options.prev)
     if options.top:
-        found = srs.fetch_top_submissions(options.top, options.no_self, options.no_link)
+        found = srs.fetch_top_submissions(options.top, options.no_self,
+                                          options.no_link)
     else:
         since_last = not options.include_prev
         found = srs.fetch_recent_submissions(max_duration=options.days,
