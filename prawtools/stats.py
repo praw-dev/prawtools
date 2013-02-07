@@ -130,14 +130,14 @@ class SubRedditStats(object):
                 break
             if (since_last and str(submission.author) == str(self.reddit.user)
                 and submission.title.startswith(self.post_prefix)):
-                  # Use info in this post to update the min_date
-                  # And don't include this post
-                  self.msg(tt('Found previous: {0}')
+                # Use info in this post to update the min_date
+                # And don't include this post
+                self.msg(tt('Found previous: {0}')
                          .format(safe_title(submission)), 2)
-            if self.prev_srs is None:  # Only use the most recent
-                self.min_date = max(self.min_date,
-                                    self._previous_max(submission))
-                self.prev_srs = submission.permalink
+                if self.prev_srs is None:  # Only use the most recent
+                    self.min_date = max(self.min_date,
+                                        self._previous_max(submission))
+                    self.prev_srs = submission.permalink
                 continue
             if exclude_self and submission.is_self:
                 continue
