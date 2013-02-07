@@ -103,8 +103,8 @@ class SubRedditStats(object):
         self.min_date = self._previous_max(submission)
         self.prev_srs = prev_url
 
-    def fetch_recent_submissions(self, max_duration, after, exclude_self,
-                                 since_last=True):
+    def fetch_recent_submissions(self, max_duration, after, exclude_self, 
+                                 exclude_link, since_last=True):
         '''Fetches recent submissions in subreddit with boundaries.
 
         Does not include posts within the last three days as their scores may
@@ -114,6 +114,7 @@ class SubRedditStats(object):
         max_duration -- When set, specifies the number of days to include
         after -- When set, fetch all submission after this submission id.
         exclude_self -- When true, don't include self posts.
+        exclude_link -- When true, don't include links.
         since_last -- When true use info from last submission to determine the
                       stop point
         '''
@@ -129,16 +130,18 @@ class SubRedditStats(object):
                 break
             if (since_last and str(submission.author) == str(self.reddit.user)
                 and submission.title.startswith(self.post_prefix)):
-                # Use info in this post to update the min_date
-                # And don't include this post
-                self.msg(tt('Found previous: {0}')
+                  # Use info in this post to update the min_date
+                  # And don't include this post
+                  self.msg(tt('Found previous: {0}')
                          .format(safe_title(submission)), 2)
-                if self.prev_srs is None:  # Only use the most recent
-                    self.min_date = max(self.min_date,
-                                        self._previous_max(submission))
-                    self.prev_srs = submission.permalink
-                continue
+                  if self.prev_srs is None:  # Only use the most recent
+                      self.min_date = max(self.min_date,
+                                          self._previous_max(submission))
+                      self.prev_srs = submission.permalink
+                  continue
             if exclude_self and submission.is_self:
+                continue
+            if exclude_link and not submission.is_self:
                 continue
             self.submissions.append(submission)
         num_submissions = len(self.submissions)
@@ -152,12 +155,13 @@ class SubRedditStats(object):
         self.max_date = self.submissions[-1].created_utc
         return True
 
-    def fetch_top_submissions(self, top, exclude_self):
+    def fetch_top_submissions(self, top, exclude_self, exclude_link):
         '''Fetches top 1000 submissions by some top value.
 
         Keyword arguments:
         top -- One of week, month, year, all
         exclude_self -- When true, don't include self posts.
+        exclude_link -- When true, include only self posts
         '''
         if top not in ('day', 'week', 'month', 'year', 'all'):
             raise TypeError('{0!r} is not a valid top value'.format(top))
@@ -165,6 +169,8 @@ class SubRedditStats(object):
         params = {'t': top}
         for submission in self.subreddit.get_top(limit=None, params=params):
             if exclude_self and submission.is_self:
+                continue
+            if exclude_link and not submission.is_self:
                 continue
             self.submissions.append(submission)
         num_submissions = len(self.submissions)
@@ -429,7 +435,10 @@ def main():
                             'month, year, or all'))
     parser.add_option('', '--no-self', action='store_true',
                       help=('Do not include self posts (and their comments) in'
-                            ' the calculation. '))
+                            ' the calculation.'))
+    parser.add_option('', '--no-link', action='store_true',
+                      help=('Only include self posts (and their comments) in the'
+                            ' calculation.'))
     parser.add_option('', '--prev',
                       help='Statically provide the URL of previous SRS page.')
     parser.add_option('', '--include-prev', action='store_true',
@@ -438,6 +447,10 @@ def main():
     options, args = parser.parse_args()
     if len(args) != 1:
         parser.error('Must provide subreddit')
+
+    if options.no_link and options.no_self:
+        parser.error('You are choosing to exclude self posts but also only include self posts.'
+                        ' Consider checking your arguments.')
 
     if options.submission_reddit:
         submission_reddit = options.submission_reddit
@@ -449,12 +462,13 @@ def main():
     if options.prev:
         srs.prev_stat(options.prev)
     if options.top:
-        found = srs.fetch_top_submissions(options.top, options.no_self)
+        found = srs.fetch_top_submissions(options.top, options.no_self, options.no_link)
     else:
         since_last = not options.include_prev
         found = srs.fetch_recent_submissions(max_duration=options.days,
                                              after=options.after,
                                              exclude_self=options.no_self,
+                                             exclude_link=options.no_link,
                                              since_last=since_last)
     if not found:
         print('No submissions were found.')
