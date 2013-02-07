@@ -127,8 +127,8 @@ class SubRedditStats(object):
                 continue
             if submission.created_utc <= self.min_date:
                 break
-            if (since_last and str(submission.author) == str(self.reddit.user)
-                and submission.title.startswith(self.post_prefix)):
+            if since_last and str(submission.author) == str(self.reddit.user) \
+                    and submission.title.startswith(self.post_prefix):
                 # Use info in this post to update the min_date
                 # And don't include this post
                 self.msg(tt('Found previous: {0}')
@@ -365,8 +365,8 @@ class SubRedditStats(object):
         while not debug and not submitted:
             if subreddit:  # Verify the user wants to submit to the subreddit
                 msg = ('You are about to submit to subreddit {0!r} as {1!r}.\n'
-                       'Are you sure? yes/[no]: '.format(
-                        subreddit, str(self.reddit.user)))
+                       'Are you sure? yes/[no]: '
+                       .format(subreddit, str(self.reddit.user)))
                 sys.stdout.write(msg)
                 sys.stdout.flush()
                 if sys.stdin.readline().strip().lower() not in ['y', 'yes']:
@@ -397,7 +397,6 @@ class SubRedditStats(object):
                     print(res.permalink)
                     submitted = True
                 except Exception as error:
-                    raise
                     print('The submission failed:' + str(error))
                     subreddit = None
 

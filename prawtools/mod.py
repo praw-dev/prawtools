@@ -125,7 +125,7 @@ class ModUtils(object):
             if self.verbose:
                 print 'Logging in'
             self.reddit.login(self._user, self._pswd)
-            self.logged_in = True
+            self._logged_in = True
 
     def message(self, category, subject, msg_file):
         self.login()
@@ -216,7 +216,7 @@ def main():
 
     usage = 'Usage: %prog [options] SUBREDDIT'
     parser = arg_parser(usage=usage)
-    parser.add_option('-a', '--add', help=msg['add']),
+    parser.add_option('-a', '--add', help=msg['add'])
     parser.add_option('-l', '--list', action='append', help=msg['list'],
                       choices=mod_choices, metavar='CATEGORY', default=[])
     parser.add_option('-F', '--file', help=msg['file'])
