@@ -103,7 +103,7 @@ class SubRedditStats(object):
         self.min_date = self._previous_max(submission)
         self.prev_srs = prev_url
 
-    def fetch_recent_submissions(self, max_duration, after, exclude_self,
+    def fetch_recent_submissions(self, max_duration, after, exclude_self, only_self,
                                  since_last=True):
         '''Fetches recent submissions in subreddit with boundaries.
 
@@ -114,9 +114,13 @@ class SubRedditStats(object):
         max_duration -- When set, specifies the number of days to include
         after -- When set, fetch all submission after this submission id.
         exclude_self -- When true, don't include self posts.
+        only_self -- When true, include only self posts.
         since_last -- When true use info from last submission to determine the
                       stop point
         '''
+        if only_self and exclude_self:
+			self.msg('You are choosing to exclude self posts but also only include self posts.'
+				     ' Consider checking your arguments.', 1)
         if max_duration:
             self.min_date = self.max_date - DAYS_IN_SECONDS * max_duration
         params = {'after': after} if after else None
@@ -140,6 +144,8 @@ class SubRedditStats(object):
                 continue
             if exclude_self and submission.is_self:
                 continue
+            if only_self and not submission.is_self:
+				continue
             self.submissions.append(submission)
         num_submissions = len(self.submissions)
         self.msg('DEBUG: Found {0} submissions'.format(num_submissions), 1)
@@ -152,13 +158,17 @@ class SubRedditStats(object):
         self.max_date = self.submissions[-1].created_utc
         return True
 
-    def fetch_top_submissions(self, top, exclude_self):
+    def fetch_top_submissions(self, top, exclude_self, only_self):
         '''Fetches top 1000 submissions by some top value.
 
         Keyword arguments:
         top -- One of week, month, year, all
         exclude_self -- When true, don't include self posts.
+        only_self -- When true, include only self posts
         '''
+        if only_self and exclude_self:
+			self.msg('You are choosing to exclude self posts but also only include self posts.'
+				     ' Consider checking your arguments.', 1)      
         if top not in ('day', 'week', 'month', 'year', 'all'):
             raise TypeError('{0!r} is not a valid top value'.format(top))
         self.msg('DEBUG: Fetching submissions', 1)
@@ -166,6 +176,8 @@ class SubRedditStats(object):
         for submission in self.subreddit.get_top(limit=None, params=params):
             if exclude_self and submission.is_self:
                 continue
+            if only_self and not submission.is_self:
+				continue
             self.submissions.append(submission)
         num_submissions = len(self.submissions)
         self.msg('DEBUG: Found {0} submissions'.format(num_submissions), 1)
@@ -430,6 +442,9 @@ def main():
     parser.add_option('', '--no-self', action='store_true',
                       help=('Do not include self posts (and their comments) in'
                             ' the calculation. '))
+    parser.add_option('', '--self-only', action='store_true',
+					  help=('Only include self posts (and their comments) in the'
+					        ' calculation'))
     parser.add_option('', '--prev',
                       help='Statically provide the URL of previous SRS page.')
     parser.add_option('', '--include-prev', action='store_true',
@@ -449,12 +464,13 @@ def main():
     if options.prev:
         srs.prev_stat(options.prev)
     if options.top:
-        found = srs.fetch_top_submissions(options.top, options.no_self)
+        found = srs.fetch_top_submissions(options.top, options.no_self, options.self_only)
     else:
         since_last = not options.include_prev
         found = srs.fetch_recent_submissions(max_duration=options.days,
                                              after=options.after,
                                              exclude_self=options.no_self,
+                                             only_self=options.self_only,
                                              since_last=since_last)
     if not found:
         print('No submissions were found.')
