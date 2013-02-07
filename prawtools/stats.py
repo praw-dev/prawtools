@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+"""Utility to provide submission and comment statistics in a subreddit."""
+
 import re
 import sys
 import time
@@ -105,19 +108,21 @@ class SubRedditStats(object):
 
     def fetch_recent_submissions(self, max_duration, after, exclude_self,
                                  exclude_link, since_last=True):
-        '''Fetches recent submissions in subreddit with boundaries.
+        """Fetch recent submissions in subreddit with boundaries.
 
         Does not include posts within the last three days as their scores may
         not be representative.
 
-        Keyword arguments:
-        max_duration -- When set, specifies the number of days to include
-        after -- When set, fetch all submission after this submission id.
-        exclude_self -- When true, don't include self posts.
-        exclude_link -- When true, don't include links.
-        since_last -- When true use info from last submission to determine the
-                      stop point
-        '''
+        :param max_duration: When set, specifies the number of days to include
+        :param after: When set, fetch all submission after this submission id.
+        :param exclude_self: When true, don't include self posts.
+        :param exclude_link:  When true, don't include links.
+        :param since_last: When true use info from last submission to determine
+            the stop point
+
+        """
+        if exclude_self and exclude_link:
+            raise TypeError('Cannot set both exclude_self and exclude_link.')
         if max_duration:
             self.min_date = self.max_date - DAYS_IN_SECONDS * max_duration
         params = {'after': after} if after else None
@@ -156,13 +161,15 @@ class SubRedditStats(object):
         return True
 
     def fetch_top_submissions(self, top, exclude_self, exclude_link):
-        '''Fetches top 1000 submissions by some top value.
+        """Fetch top 1000 submissions by some top value.
 
-        Keyword arguments:
-        top -- One of week, month, year, all
-        exclude_self -- When true, don't include self posts.
-        exclude_link -- When true, include only self posts
-        '''
+        :param top: One of week, month, year, all
+        :param exclude_self: When true, don't include self posts.
+        :param exclude_link: When true, include only self posts
+
+        """
+        if exclude_self and exclude_link:
+            raise TypeError('Cannot set both exclude_self and exclude_link.')
         if top not in ('day', 'week', 'month', 'year', 'all'):
             raise TypeError('{0!r} is not a valid top value'.format(top))
         self.msg('DEBUG: Fetching submissions', 1)

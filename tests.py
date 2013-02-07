@@ -17,6 +17,12 @@ class StatsTest(unittest.TestCase):  # pylint: disable-msg=R0904
             self.assertTrue(prev < submission.created_utc)
             prev = submission.created_utc
 
+    def test_recent_type_eror(self):
+        srs = SubRedditStats('redditdev', None, None)
+        self.assertRaises(TypeError, srs.fetch_recent_submissions,
+                          exclude_self=True, exclude_link=True, after=None,
+                          max_duration=7)
+
     def test_top(self):
         srs = SubRedditStats('redditdev', None, None)
         self.assertTrue(
@@ -26,6 +32,11 @@ class StatsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         for submission in srs.submissions:
             self.assertTrue(prev < submission.created_utc)
             prev = submission.created_utc
+
+    def test_top_type_eror(self):
+        srs = SubRedditStats('redditdev', None, None)
+        self.assertRaises(TypeError, srs.fetch_top_submissions,
+                          exclude_self=True, exclude_link=True)
 
 
 if __name__ == '__main__':
