@@ -17,7 +17,7 @@ class StatsTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_top(self):
         srs = SubRedditStats('redditdev', None, None)
         self.assertTrue(
-            srs.fetch_top_submissions('week', None))
+            srs.fetch_top_submissions('week', None, None))
         self.assertTrue(len(srs.submissions) > 1)
         prev = 0
         for submission in srs.submissions:
