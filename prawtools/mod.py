@@ -1,3 +1,4 @@
+import json
 import re
 import sys
 from collections import Counter
@@ -46,7 +47,7 @@ class ModUtils(object):
             self.login()
             if self.verbose:
                 print 'Fetching flair list for %s' % self.sub
-            for flair in self.sub.get_flair_list():
+            for flair in self.sub.get_flair_list(limit=None):
                 for item in ('flair_text', 'flair_css_class'):
                     flair[item] = self.remove_entities(flair[item])
                 self._current_flair.append(flair)
@@ -154,8 +155,13 @@ class ModUtils(object):
             user.send_message(subject, msg)
             print 'Sent to: %s' % str(user)
 
-    def output_current_flair(self):
-        for flair in self.current_flair():
+    def output_current_flair(self, as_json=False):
+        flair_list = sorted(self.current_flair(), key=lambda x: x['user'])
+        if as_json:
+            print json.dumps(flair_list, sort_keys=True, indent=4)
+            return
+
+        for flair in flair_list:
             print flair['user']
             print '  Text: %s\n   CSS: %s' % (flair['flair_text'],
                                               flair['flair_css_class'])
@@ -197,6 +203,7 @@ def main():
         'file': 'The file containing contents for --message',
         'flair': 'List flair for the subreddit.',
         'flair_stats': 'Display the number of users with each flair.',
+        'json': 'Output the results as json. Applies to --flair',
         'limit': ('The minimum number of users that must have the specified '
                   'flair in order to add as a template. default: %default'),
         'list': ('List the users in one of the following categories: '
@@ -225,6 +232,10 @@ def main():
                       help=msg['flair_stats'])
     parser.add_option('-m', '--message', choices=mod_choices, help=msg['msg'])
     parser.add_option('', '--subject', help=msg['subject'])
+
+    group = OptionGroup(parser, 'Format options')
+    group.add_option('-j', '--json', action='store_true', help=msg['json'])
+    parser.add_option_group(group)
 
     group = OptionGroup(parser, 'Sync options')
     group.add_option('', '--sync', action='store_true', help=msg['sync'])
@@ -256,7 +267,7 @@ def main():
     for category in options.list:
         modutils.output_list(category)
     if options.flair:
-        modutils.output_current_flair()
+        modutils.output_current_flair(as_json=options.json)
     if options.flair_stats:
         modutils.output_flair_stats()
     if options.sync:

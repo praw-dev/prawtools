@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Utility to provide submission and comment statistics in a subreddit."""
 
 import re
