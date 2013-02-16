@@ -41,6 +41,12 @@ class ModUtils(object):
             func(name)
             print 'Added %r to %s' % (name, category)
 
+    def clear_empty(self):
+        for flair in self.current_flair():
+            if not flair['flair_text'] and not flair['flair_css_class']:
+                print self.reddit.delete_flair(self.sub, flair['user'])
+                print 'Removed flair for {0}'.format(flair['user'])
+
     def current_flair(self):
         if self._current_flair is None:
             self._current_flair = []
@@ -198,6 +204,7 @@ def main():
     msg = {
         'add': ('Add users to one of the following categories: %s' %
                 mod_choices_dsp),
+        'clear': 'Remove users who have no flair set.',
         'css': 'Ignore the CSS field when synchronizing flair.',
         'edit': 'When adding flair templates, mark them as editable.',
         'file': 'The file containing contents for --message',
@@ -226,6 +233,8 @@ def main():
     parser.add_option('-a', '--add', help=msg['add'])
     parser.add_option('-l', '--list', action='append', help=msg['list'],
                       choices=mod_choices, metavar='CATEGORY', default=[])
+    parser.add_option('-c', '--clear-empty', action='store_true',
+                      help=msg['clear'])
     parser.add_option('-F', '--file', help=msg['file'])
     parser.add_option('-f', '--flair', action='store_true', help=msg['flair'])
     parser.add_option('', '--flair-stats', action='store_true',
@@ -264,6 +273,8 @@ def main():
 
     if options.add:
         modutils.add_users(options.add)
+    if options.clear_empty:
+        modutils.clear_empty()
     for category in options.list:
         modutils.output_list(category)
     if options.flair:
