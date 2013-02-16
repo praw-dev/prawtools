@@ -1,3 +1,5 @@
+from __future__ import print_function, unicode_literals
+
 import json
 import re
 import sys
@@ -31,28 +33,28 @@ class ModUtils(object):
                    'moderators': 'make_moderator'}
 
         if category not in mapping:
-            print '%r is not a valid option for --add' % category
+            print('%r is not a valid option for --add' % category)
             return
         self.login()
         func = getattr(self.sub, mapping[category])
-        print 'Enter user names (any separation should suffice):'
+        print('Enter user names (any separation should suffice):')
         data = sys.stdin.read().strip()
         for name in re.split('[^A-Za-z0-9_]+', data):
             func(name)
-            print 'Added %r to %s' % (name, category)
+            print('Added %r to %s' % (name, category))
 
     def clear_empty(self):
         for flair in self.current_flair():
             if not flair['flair_text'] and not flair['flair_css_class']:
-                print self.reddit.delete_flair(self.sub, flair['user'])
-                print 'Removed flair for {0}'.format(flair['user'])
+                print(self.reddit.delete_flair(self.sub, flair['user']))
+                print('Removed flair for {0}'.format(flair['user']))
 
     def current_flair(self):
         if self._current_flair is None:
             self._current_flair = []
             self.login()
             if self.verbose:
-                print 'Fetching flair list for %s' % self.sub
+                print('Fetching flair list for %s' % self.sub)
             for flair in self.sub.get_flair_list(limit=None):
                 for item in ('flair_text', 'flair_css_class'):
                     flair[item] = self.remove_entities(flair[item])
@@ -102,7 +104,7 @@ class ModUtils(object):
             else:
                 counter[key] = 1
         if self.verbose:
-            print
+            print()
 
         # Sort flair list items according to the specified sort
         if sort == 'alpha':
@@ -112,7 +114,7 @@ class ModUtils(object):
 
         # Clear current templates and store flair according to the sort
         if self.verbose:
-            print 'Clearing current flair templates'
+            print('Clearing current flair templates')
         self.sub.clear_flair_templates()
         for key, count in items:
             if not key or count < limit:
@@ -124,13 +126,13 @@ class ModUtils(object):
             else:
                 text, css = '', key
             if self.verbose:
-                print 'Adding template: text: "%s" css: "%s"' % (text, css)
+                print('Adding template: text: "%s" css: "%s"' % (text, css))
             self.sub.add_flair_template(text, css, editable)
 
     def login(self):
         if not self._logged_in:
             if self.verbose:
-                print 'Logging in'
+                print('Logging in')
             self.reddit.login(self._user, self._pswd)
             self._logged_in = True
 
@@ -138,39 +140,39 @@ class ModUtils(object):
         self.login()
         users = getattr(self.sub, 'get_%s' % category)()
         if not users:
-            print 'There are no %s on %s.' % (category, str(self.sub))
+            print('There are no %s on %s.' % (category, str(self.sub)))
             return
 
         if msg_file:
             try:
                 msg = open(msg_file).read()
-            except IOError, error:
-                print str(error)
+            except IOError as error:
+                print(str(error))
                 return
         else:
-            print 'Enter message:'
+            print('Enter message:')
             msg = sys.stdin.read()
 
-        print ('You are about to send the following '
-               'message to the users %s:') % ', '.join([str(x) for x in users])
-        print '---BEGIN MESSAGE---\n%s\n---END MESSAGE---' % msg
+        print('You are about to send the following '
+              'message to the users %s:' % ', '.join([str(x) for x in users]))
+        print('---BEGIN MESSAGE---\n%s\n---END MESSAGE---' % msg)
         if raw_input('Are you sure? yes/[no]: ').lower() not in ['y', 'yes']:
-            print 'Message sending aborted.'
+            print('Message sending aborted.')
             return
         for user in users:
             user.send_message(subject, msg)
-            print 'Sent to: %s' % str(user)
+            print('Sent to: %s' % str(user))
 
     def output_current_flair(self, as_json=False):
         flair_list = sorted(self.current_flair(), key=lambda x: x['user'])
         if as_json:
-            print json.dumps(flair_list, sort_keys=True, indent=4)
+            print(json.dumps(flair_list, sort_keys=True, indent=4))
             return
 
         for flair in flair_list:
-            print flair['user']
-            print '  Text: %s\n   CSS: %s' % (flair['flair_text'],
-                                              flair['flair_css_class'])
+            print(flair['user'])
+            print('  Text: %s\n   CSS: %s' % (flair['flair_text'],
+                                              flair['flair_css_class']))
 
     def output_flair_stats(self):
         css_counter = Counter()
@@ -181,21 +183,21 @@ class ModUtils(object):
             if flair['flair_text']:
                 text_counter[flair['flair_text']] += 1
 
-        print 'Flair CSS Statistics'
+        print('Flair CSS Statistics')
         for flair, count in sorted(css_counter.items(),
                                    key=lambda x: (x[1], x[0])):
-            print '{0:3} {1}'.format(count, flair)
+            print('{0:3} {1}'.format(count, flair))
 
-        print 'Flair Text Statistics'
+        print('Flair Text Statistics')
         for flair, count in sorted(text_counter.items(),
                                    key=lambda x: (x[1], x[0]), reverse=True):
-            print '{0:3} {1}'.format(count, flair)
+            print('{0:3} {1}'.format(count, flair))
 
     def output_list(self, category):
         self.login()
-        print '%s users:' % category
+        print('%s users:' % category)
         for user in getattr(self.sub, 'get_%s' % category)():
-            print '  %s' % user
+            print('  %s' % user)
 
 
 def main():
