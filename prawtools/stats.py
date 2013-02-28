@@ -91,7 +91,7 @@ class SubRedditStats(object):
         self.reddit.login(user, pswd)
 
     def msg(self, msg, level, overwrite=False):
-        if self.verbosity >= level:
+        if self.verbosity and self.verbosity >= level:
             sys.stdout.write(msg)
             if overwrite:
                 sys.stdout.write('\r')
