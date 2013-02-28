@@ -26,7 +26,7 @@ class SubRedditStats(object):
     post_footer = tt('>Generated with [BBoe](/u/bboe)\'s [Subreddit Stats]'
                      '(https://github.com/praw-dev/prawtools)  \n{0}'
                      'SRS Marker: {1}')
-    re_marker = re.compile('SRS Marker: (\d+)')
+    re_marker = re.compile(r'SRS Marker: (\d+)')
 
     @staticmethod
     def _previous_max(submission):
@@ -52,7 +52,7 @@ class SubRedditStats(object):
             return '_deleted_'
         elif isinstance(user, Redditor):
             user = str(user)
-        return tt('[{0}](/user/{1})').format(user.replace('_', '\_'), user)
+        return tt('[{0}](/user/{1})').format(user.replace('_', r'\_'), user)
 
     @staticmethod
     def _submit(func, *args, **kwargs):
@@ -125,8 +125,7 @@ class SubRedditStats(object):
             self.min_date = self.max_date - DAYS_IN_SECONDS * max_duration
         params = {'after': after} if after else None
         self.msg('DEBUG: Fetching submissions', 1)
-        for submission in self.subreddit.get_new_by_date(limit=None,
-                                                         params=params):
+        for submission in self.subreddit.get_new(limit=None, params=params):
             if submission.created_utc > self.max_date:
                 continue
             if submission.created_utc <= self.min_date:
@@ -450,14 +449,15 @@ def main():
 
     options, args = parser.parse_args()
     if len(args) != 1:
-        print('Enter subreddit name:')
-        subject_reddit = raw_input('')
-        if subject_reddit == '':
+        sys.stdout.write('Enter subreddit name: ')
+        sys.stdout.flush()
+        subject_reddit = sys.stdin.readline().strip()
+        if not subject_reddit:
             parser.error('No subreddit name entered')
     else:
         subject_reddit = args[0]
 
-    print('You chose to analyze this subreddit: ' + subject_reddit)
+    print('You chose to analyze this subreddit: {0}'.format(subject_reddit))
 
     if options.no_link and options.no_self:
         parser.error('You are choosing to exclude self posts but also only '
