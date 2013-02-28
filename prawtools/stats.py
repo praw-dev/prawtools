@@ -417,7 +417,7 @@ class SubRedditStats(object):
 
 
 def main():
-    parser = arg_parser(usage='usage: %prog [options] subreddit')
+    parser = arg_parser(usage='usage: %prog [options] [SUBREDDIT]')
     parser.add_option('-s', '--submitters', type='int', default=5,
                       help='Number of top submitters to display '
                       '[default %default]')
@@ -450,7 +450,14 @@ def main():
 
     options, args = parser.parse_args()
     if len(args) != 1:
-        parser.error('Must provide subreddit')
+        print('Enter subreddit name:')
+        subject_reddit = raw_input('')
+        if subject_reddit == '':
+            parser.error('No subreddit name entered')
+    else:
+        subject_reddit = args[0]
+
+    print('You chose to analyze this subreddit: ' + subject_reddit)
 
     if options.no_link and options.no_self:
         parser.error('You are choosing to exclude self posts but also only '
@@ -459,9 +466,9 @@ def main():
     if options.submission_reddit:
         submission_reddit = options.submission_reddit
     else:
-        submission_reddit = args[0]
+        submission_reddit = subject_reddit
 
-    srs = SubRedditStats(args[0], options.site, options.verbose)
+    srs = SubRedditStats(subject_reddit, options.site, options.verbose)
     srs.login(options.user, options.pswd)
     if options.prev:
         srs.prev_stat(options.prev)
