@@ -9,6 +9,7 @@ from praw import Reddit
 from praw.errors import ExceptionList, RateLimitExceeded
 from praw.helpers import flatten_tree
 from praw.objects import Redditor
+from requests.exceptions import HTTPError
 from six import iteritems, itervalues, text_type as tt
 from .helpers import arg_parser
 
@@ -203,9 +204,14 @@ class SubRedditStats(object):
             # Note that this is the first time the complete submission object
             # is obtained. Only a partial object was returned when getting the
             # subreddit listings.
-            submission = self.reddit.get_submission(submission.permalink,
-                                                    comment_limit=None,
-                                                    comment_sort='top')
+            try:
+                submission = self.reddit.get_submission(submission.permalink,
+                                                        comment_limit=None,
+                                                        comment_sort='top')
+            except HTTPError as exc:
+                print('Ignoring comments on {0} due to HTTP status {1}'
+                      .format(submission.url, exc.response.status_code))
+                continue
             self.msg('{0}/{1} submissions'.format(i + 1, num), 2,
                      overwrite=True)
             if submission.num_comments == 0:
