@@ -420,6 +420,22 @@ class SubRedditStats(object):
             print(base_title)
             print(body)
 
+    def save_csv(self, filename):
+        """Create csv file containing comments and submissions by author."""
+        redditors = set(self.submitters.keys()).union(self.commenters.keys())
+        mapping = dict((x.lower(), x) for x in redditors)
+        with open(filename, 'w') as outfile:
+            outfile.write('username, type, permalink, score\n')
+            for _, redditor in sorted(mapping.items()):
+                for submission in self.submitters.get(redditor, []):
+                    outfile.write('{0}, submission, {1}, {2}\n'
+                                  .format(redditor, submission.permalink,
+                                          submission.score))
+                for comment in self.commenters.get(redditor, []):
+                    outfile.write('{0}, comment, {1}, {2}\n'
+                                  .format(redditor, comment.permalink,
+                                          comment.score))
+
 
 def main():
     parser = arg_parser(usage='usage: %prog [options] [SUBREDDIT]')
@@ -452,6 +468,8 @@ def main():
                       help='Statically provide the URL of previous SRS page.')
     parser.add_option('', '--include-prev', action='store_true',
                       help='Don\'t try to avoid overlap with a previous SRS.')
+    parser.add_option('-o', '--output',
+                      help='Save result csv to named file.')
 
     options, args = parser.parse_args()
     if len(args) != 1:
@@ -494,5 +512,7 @@ def main():
     srs.process_submitters()
     if options.commenters > 0:
         srs.process_commenters()
+    if options.output:
+        srs.save_csv(options.output)
     srs.publish_results(submission_reddit, options.submitters,
                         options.commenters, 5, 5, options.top, options.debug)
