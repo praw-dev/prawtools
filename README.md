@@ -62,6 +62,8 @@ subreddit_stats is a tool to provide basic statistics on a subreddit.
 To see the what sort of output subreddit stats generates check out
 [/r/subreddit_stats](http://www.reddit.com/r/subreddit_stats).
 
+The tool will only analyze up to 1,000 submissions.
+
 
 ### subreddit_stats examples
 
@@ -69,6 +71,16 @@ To see the what sort of output subreddit stats generates check out
 verbose output. Post results to subreddit __bar__ as user __user__.
 
         subreddit_stats -d30 -vv -R bar -u user foo
+        
+ The -d30 flag will get all submissions from the last 30 days, but will ignore the 
+last three days. As a result, you may experience messages like "No submissions 
+found". To analyze one month, try:
+
+        subreddit_stats -tmonth -vv -R bar -u user foo
+        
+ Similarly, to analyze one year:
+
+        subreddit_stats -tyear -vv -R bar -u user foo
 
 0. Generate stats for subreddit __blah__ for the top posts of the year. Post
 the results to the same subreddit as user __resu__.
