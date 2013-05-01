@@ -43,15 +43,15 @@ def main():
     else:
         subreddit = 'all'
 
-    print('Searching for:')
+    print('Alerting on:')
     for item in sorted(args):
         print(' * {0}'.format(item))
     print ('using the comment stream: http://www.reddit.com/r/{0}/comments'
            .format(subreddit))
 
     try:
-        session = praw.Reddit('Reddit Alerts by /u/bboe',
-                              disable_update_check=True)
+        session = praw.Reddit('reddit_alert (prawtools {0})'
+                              .format(__version__), disable_update_check=True)
         for comment in praw.helpers.comment_stream(session, subreddit,
                                                    options.verbose):
             match = regex.search(comment.body)
