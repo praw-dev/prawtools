@@ -11,6 +11,8 @@ from praw.helpers import flatten_tree
 from praw.objects import Redditor
 from requests.exceptions import HTTPError
 from six import iteritems, itervalues, text_type as tt
+from update_checker import update_check
+from . import __version__
 from .helpers import arg_parser
 
 DAYS_IN_SECONDS = 60 * 60 * 24
@@ -75,7 +77,7 @@ class SubRedditStats(object):
                     raise
 
     def __init__(self, subreddit, site, verbosity):
-        self.reddit = Reddit(str(self), site)
+        self.reddit = Reddit(str(self), site, disable_update_check=True)
         self.subreddit = self.reddit.get_subreddit(subreddit)
         self.verbosity = verbosity
         self.submissions = []
@@ -480,6 +482,9 @@ def main():
             parser.error('No subreddit name entered')
     else:
         subject_reddit = args[0]
+
+    if not options.disable_update_check:  # Check for updates
+        update_check('prawtools', __version__)
 
     print('You chose to analyze this subreddit: {0}'.format(subject_reddit))
 

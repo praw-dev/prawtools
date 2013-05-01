@@ -6,6 +6,8 @@ import sys
 from collections import Counter
 from optparse import OptionGroup
 from praw import Reddit
+from update_checker import update_check
+from . import __version__
 from .helpers import arg_parser
 
 
@@ -19,7 +21,7 @@ class ModUtils(object):
 
     def __init__(self, subreddit, site=None, user=None, pswd=None,
                  verbose=None):
-        self.reddit = Reddit(str(self), site)
+        self.reddit = Reddit(str(self), site, disable_update_check=True)
         self._logged_in = False
         self._user = user
         self._pswd = pswd
@@ -269,6 +271,9 @@ def main():
     if options.message and not options.subject:
         parser.error('Must provide --subject when providing --message.')
     subreddit = args[0]
+
+    if not options.disable_update_check:  # Check for updates
+        update_check('prawtools', __version__)
 
     modutils = ModUtils(subreddit, options.site, options.user, options.pswd,
                         options.verbose)

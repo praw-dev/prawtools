@@ -3,6 +3,8 @@ from __future__ import print_function, unicode_literals
 import re
 import praw
 import sys
+from update_checker import update_check
+from . import __version__
 from .helpers import arg_parser
 
 
@@ -26,6 +28,9 @@ def main():
     if not args:
         parser.error('At least one KEYWORD must be provided.')
 
+    if not options.disable_update_check:  # Check for updates
+        update_check('prawtools', __version__)
+
     # Build regex
     reg_prefix = r'(?:^|[^a-z])'  # Any character (or start) can precede
     reg_suffix = r'(?:$|[^a-z])'  # Any character (or end) can follow
@@ -45,8 +50,9 @@ def main():
            .format(subreddit))
 
     try:
-        r = praw.Reddit('Reddit Alerts by /u/bboe')
-        for comment in praw.helpers.comment_stream(r, subreddit,
+        session = praw.Reddit('Reddit Alerts by /u/bboe',
+                              disable_update_check=True)
+        for comment in praw.helpers.comment_stream(session, subreddit,
                                                    options.verbose):
             match = regex.search(comment.body)
             if match:
