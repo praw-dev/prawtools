@@ -24,14 +24,26 @@ def main():
                       help=('When at least one `-s` option is provided '
                             '(multiple can be) only alert for comments in the '
                             'indicated subreddit(s).'))
+    parser.add_option('-m', '--message', metavar='USER',
+                      help=('When set, send a reddit message to USER with the '
+                            'alert. Requires the alert script to login.'))
     options, args = parser.parse_args()
     if not args:
         parser.error('At least one KEYWORD must be provided.')
 
-    if not options.disable_update_check:  # Check for updates
+    # Create the reddit session, and login if necessary
+    session = praw.Reddit('reddit_alert (prawtools {0})'.format(__version__),
+                          site_name=options.site, disable_update_check=True)
+    if options.message:
+        session.login(options.user, options.pswd)
+        msg_to = session.get_redditor(options.message)
+
+    # Check for updates
+    if not options.disable_update_check:
         update_check('prawtools', __version__)
 
     # Build regex
+    args = [x.lower() for x in args]
     reg_prefix = r'(?:^|[^a-z])'  # Any character (or start) can precede
     reg_suffix = r'(?:$|[^a-z])'  # Any character (or end) can follow
     regex = re.compile(r'{0}({1}){2}'.format(reg_prefix, '|'.join(args),
@@ -50,14 +62,18 @@ def main():
            .format(subreddit))
 
     try:
-        session = praw.Reddit('reddit_alert (prawtools {0})'
-                              .format(__version__), disable_update_check=True)
         for comment in praw.helpers.comment_stream(session, subreddit,
                                                    options.verbose):
             match = regex.search(comment.body)
             if match:
-                print('{0}: {1}'.format(match.group(1).lower(),
-                                        quick_url(comment)))
+                keyword = match.group(1).lower()
+                url = quick_url(comment)
+                print('{0}: {1}'.format(keyword, url))
+                if options.message:
+                    msg_to.send_message(
+                        'Reddit Alert: {0}'.format(keyword),
+                        '{0}\n\nby /u/{1}\n\n---\n\n{2}'.format(
+                            url, comment.author, comment.body))
     except KeyboardInterrupt:
         sys.stderr.write('\n')
         print('Goodbye!\n')
