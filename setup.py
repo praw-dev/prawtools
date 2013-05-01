@@ -31,9 +31,10 @@ setup(name=PACKAGE_NAME,
                    'Programming Language :: Python :: 3.2',
                    'Programming Language :: Python :: 3.3',
                    'Topic :: Utilities'],
-      install_requires=['praw>=2.0.11'],
+      install_requires=['praw>=2.1.1dev'],
       packages=[PACKAGE_NAME],
       entry_points={'console_scripts':
-                        ['subreddit_stats = prawtools.stats:main',
-                         'modutils = prawtools.mod:main']},
+                        ['modutils = prawtools.mod:main',
+                         'reddit_alert = prawtools.alert:main',
+                         'subreddit_stats = prawtools.stats:main']},
       test_suite='tests')
