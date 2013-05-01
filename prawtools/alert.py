@@ -2,6 +2,7 @@ from __future__ import print_function, unicode_literals
 
 import re
 import praw
+import sys
 from .helpers import arg_parser
 
 
@@ -43,9 +44,14 @@ def main():
     print ('using the comment stream: http://www.reddit.com/r/{0}/comments'
            .format(subreddit))
 
-    r = praw.Reddit('Reddit Alerts by /u/bboe')
-    for comment in praw.helpers.comment_stream(r, subreddit, options.verbose):
-        match = regex.search(comment.body)
-        if match:
-            print('{0}: {1}'.format(match.group(1).lower(),
-                                    quick_url(comment)))
+    try:
+        r = praw.Reddit('Reddit Alerts by /u/bboe')
+        for comment in praw.helpers.comment_stream(r, subreddit,
+                                                   options.verbose):
+            match = regex.search(comment.body)
+            if match:
+                print('{0}: {1}'.format(match.group(1).lower(),
+                                        quick_url(comment)))
+    except KeyboardInterrupt:
+        sys.stderr.write('\n')
+        print('Goodbye!\n')
