@@ -63,7 +63,7 @@ def main():
 
     try:
         for comment in praw.helpers.comment_stream(session, subreddit,
-                                                   options.verbose):
+                                                   verbosity=options.verbose):
             match = regex.search(comment.body)
             if match:
                 keyword = match.group(1).lower()
