@@ -224,8 +224,10 @@ class SubRedditStats(object):
                 print('Ignored {0} comments ({1} MoreComment objects)'
                       .format(num, len(skipped)))
             self.comments.extend(flatten_tree(submission.comments))
+            # pylint: disable-msg=W0212
             for orphans in itervalues(submission._orphaned):
                 self.comments.extend(orphans)
+            # pylint: enable-msg=W0212
         for comment in self.comments:
             if comment.author:
                 self.commenters[str(comment.author)].append(comment)
@@ -255,7 +257,9 @@ class SubRedditStats(object):
 
         retval = '||Submissions|%|Comments|%|\n:-:|--:|--:|--:|--:\n'
         for quad in values:
+            # pylint: disable-msg=W0142
             retval += '__{0}__|{1}|{2}|{3}|{4}\n'.format(*quad)
+            # pylint: enable-msg=W0142
         return retval + '\n'
 
     def top_submitters(self, num, num_submissions):
@@ -414,7 +418,7 @@ class SubRedditStats(object):
                                        text=body)
                     print(res.permalink)
                     submitted = True
-                except Exception as error:
+                except Exception as error:  # pylint: disable-msg=W0703
                     print('The submission failed:' + str(error))
                     subreddit = None
 
