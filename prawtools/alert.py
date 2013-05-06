@@ -24,6 +24,9 @@ def main():
                       help=('When at least one `-s` option is provided '
                             '(multiple can be) only alert for comments in the '
                             'indicated subreddit(s).'))
+    parser.add_option('-I', '--ignore-user', action='append', metavar='USER',
+                      help=('Ignore comments from the provided user. Can be '
+                            'supplied multiple times.'))
     parser.add_option('-m', '--message', metavar='USER',
                       help=('When set, send a reddit message to USER with the '
                             'alert. Requires the alert script to login.'))
@@ -61,9 +64,17 @@ def main():
     print ('using the comment stream: http://www.reddit.com/r/{0}/comments'
            .format(subreddit))
 
+    # Build ignore set
+    if options.ignore_user:
+        ignore_users = set(x.lower() for x in options.ignore_user)
+    else:
+        ignore_users = set()
+
     try:
         for comment in praw.helpers.comment_stream(session, subreddit,
                                                    verbosity=options.verbose):
+            if comment.author.name.lower() in ignore_users:
+                continue
             match = regex.search(comment.body)
             if match:
                 keyword = match.group(1).lower()
