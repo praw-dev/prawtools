@@ -1,3 +1,6 @@
+"""prawtools.alert provides the reddit_alert command that will alert you when
+chosen keywords appear in reddit comments."""
+
 from __future__ import print_function, unicode_literals
 
 import re
@@ -9,7 +12,7 @@ from .helpers import arg_parser
 
 
 def quick_url(comment):
-    """Provide the URL for the comment without fetching its submission."""
+    """Return the URL for the comment without fetching its submission."""
     def to_id(fullname):
         return fullname.split('_', 1)[1]
     return ('http://www.reddit.com/r/{0}/comments/{1}/_/{2}?context=3'
@@ -18,6 +21,7 @@ def quick_url(comment):
 
 
 def main():
+    """Provide the entry point into the reddit_alert program."""
     usage = 'Usage: %prog [options] KEYWORD...'
     parser = arg_parser(usage=usage)
     parser.add_option('-s', '--subreddit', action='append',

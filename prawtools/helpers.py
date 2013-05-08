@@ -1,8 +1,11 @@
+"""prawtools.helpers provides functions useful in other prawtools modules."""
+
 from optparse import OptionGroup, OptionParser
 from . import __version__
 
 
 def arg_parser(*args, **kwargs):
+    """Return a parser with common options used in the prawtools commands."""
     msg = {
         'site': 'The site to connect to defined in your praw.ini file.',
         'user': ('The user to login as. If not specified the user (if any) '
