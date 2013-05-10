@@ -1,3 +1,7 @@
+"""prawtools.mod provides the modutils command that allows you to view and
+change some subreddit options."""
+
+
 from __future__ import print_function, unicode_literals
 
 import json
@@ -12,16 +16,13 @@ from .helpers import arg_parser
 
 
 class ModUtils(object):
-    @staticmethod
-    def remove_entities(item):
-        if not item:
-            return item
-        return item.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;',
-                                                                       '>')
+
+    """Class that provides all the modutils functionality."""
 
     def __init__(self, subreddit, site=None, user=None, pswd=None,
                  verbose=None):
         self.reddit = Reddit(str(self), site, disable_update_check=True)
+        self.reddit.config.decode_html_entities = True
         self._logged_in = False
         self._user = user
         self._pswd = pswd
@@ -30,6 +31,7 @@ class ModUtils(object):
         self._current_flair = None
 
     def add_users(self, category):
+        """Add users to 'banned', 'contributors', or 'moderators'."""
         mapping = {'banned': 'ban',
                    'contributors': 'make_contributor',
                    'moderators': 'make_moderator'}
@@ -46,20 +48,20 @@ class ModUtils(object):
             print('Added %r to %s' % (name, category))
 
     def clear_empty(self):
+        """Remove flair that is not visible or has been set to empty."""
         for flair in self.current_flair():
             if not flair['flair_text'] and not flair['flair_css_class']:
                 print(self.reddit.delete_flair(self.sub, flair['user']))
                 print('Removed flair for {0}'.format(flair['user']))
 
     def current_flair(self):
+        """Generate the flair, by user, for the subreddit."""
         if self._current_flair is None:
             self._current_flair = []
             self.login()
             if self.verbose:
                 print('Fetching flair list for %s' % self.sub)
             for flair in self.sub.get_flair_list(limit=None):
-                for item in ('flair_text', 'flair_css_class'):
-                    flair[item] = self.remove_entities(flair[item])
                 self._current_flair.append(flair)
                 yield flair
         else:
@@ -68,6 +70,17 @@ class ModUtils(object):
 
     def flair_template_sync(self, editable, limit,  # pylint: disable-msg=R0912
                             static, sort, use_css, use_text):
+        """Synchronize templates with flair that already exists on the site.
+
+        :param editable: Indicates that all the options should be editable.
+        :param limit: The minimum number of users that must share the flair
+            before it is added as a template.
+        :param static: A list of flair templates that will always be added.
+        :param sort: The order to sort the flair templates.
+        :param use_css: Include css in the templates.
+        :param use_text: Include text in the templates.
+
+        """
         # Parameter verification
         if not use_text and not use_css:
             raise Exception('At least one of use_text or use_css must be True')
@@ -132,6 +145,7 @@ class ModUtils(object):
             self.sub.add_flair_template(text, css, editable)
 
     def login(self):
+        """Login and provide debugging output if so wanted."""
         if not self._logged_in:
             if self.verbose:
                 print('Logging in')
@@ -139,6 +153,7 @@ class ModUtils(object):
             self._logged_in = True
 
     def message(self, category, subject, msg_file):
+        """Send message to all users in `category`."""
         self.login()
         users = getattr(self.sub, 'get_%s' % category)()
         if not users:
@@ -166,6 +181,7 @@ class ModUtils(object):
             print('Sent to: %s' % str(user))
 
     def output_current_flair(self, as_json=False):
+        """Display the current flair for all users in the subreddit."""
         flair_list = sorted(self.current_flair(), key=lambda x: x['user'])
         if as_json:
             print(json.dumps(flair_list, sort_keys=True, indent=4))
@@ -177,6 +193,7 @@ class ModUtils(object):
                                               flair['flair_css_class']))
 
     def output_flair_stats(self):
+        """Display statistics (number of users) for each unique flair item."""
         css_counter = Counter()
         text_counter = Counter()
         for flair in self.current_flair():
@@ -196,6 +213,7 @@ class ModUtils(object):
             print('{0:3} {1}'.format(count, flair))
 
     def output_list(self, category):
+        """Display the list of users in `category`."""
         self.login()
         print('%s users:' % category)
         for user in getattr(self.sub, 'get_%s' % category)():
@@ -203,6 +221,7 @@ class ModUtils(object):
 
 
 def main():
+    """Provide the entry point in the the modutils command."""
     mod_choices = ('banned', 'contributors', 'moderators')
     mod_choices_dsp = ', '.join(['`%s`' % x for x in mod_choices])
     msg = {
