@@ -249,6 +249,17 @@ class SubRedditStats(object):
         sub_downs = sum(x.downs for x in self.submissions)
         comm_ups = sum(x.ups for x in self.comments)
         comm_downs = sum(x.downs for x in self.comments)
+        sub_rate = (86400. * len(self.submissions)
+                    / (self.max_date - self.min_date))
+
+        # Compute comment rate
+        if self.comments:
+            self.comments.sort(key=lambda x: x.created_utc)
+            duration = (self.comments[-1].created_utc -
+                        self.comments[0].created_utc)
+            comm_rate = 86400. * len(self.comments) / duration
+        else:
+            comm_rate = 0
 
         if sub_ups > 0 or sub_downs > 0:
             sub_up_perc = sub_ups * 100 / (sub_ups + sub_downs)
@@ -260,6 +271,8 @@ class SubRedditStats(object):
             comm_up_perc = 100
 
         values = [('Total', len(self.submissions), '', len(self.comments), ''),
+                  ('Rate (per day)', '{0:.2f}'.format(sub_rate), '',
+                   '{0:.2f}'.format(comm_rate), ''),
                   ('Unique Redditors', len(self.submitters), '',
                    len(self.commenters), ''),
                   ('Upvotes', sub_ups, '{0}%'.format(sub_up_perc),
