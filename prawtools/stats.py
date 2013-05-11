@@ -20,10 +20,14 @@ MAX_BODY_SIZE = 10000
 
 
 def safe_title(submission):
+    """Return titles with newlines replaced by spaces and stripped."""
     return submission.title.replace('\n', ' ').strip()
 
 
 class SubRedditStats(object):
+
+    """Contain all the functionality of the subreddit_stats command."""
+
     post_prefix = tt('Subreddit Stats:')
     post_header = tt('---\n###{0}\n')
     post_footer = tt('>Generated with [BBoe](/u/bboe)\'s [Subreddit Stats]'
@@ -89,11 +93,13 @@ class SubRedditStats(object):
         self.prev_srs = None
 
     def login(self, user, pswd):
+        """Login and provide debugging output if so wanted."""
         if self.verbosity > 0:
             print('Logging in')
         self.reddit.login(user, pswd)
 
     def msg(self, msg, level, overwrite=False):
+        """Output a messaage to the screen if the verbosity is sufficient."""
         if self.verbosity and self.verbosity >= level:
             sys.stdout.write(msg)
             if overwrite:
@@ -103,6 +109,7 @@ class SubRedditStats(object):
                 sys.stdout.write('\n')
 
     def prev_stat(self, prev_url):
+        """Load the previous subreddit stats page."""
         submission = self.reddit.get_submission(prev_url)
         self.min_date = self._previous_max(submission)
         self.prev_srs = prev_url
@@ -120,6 +127,7 @@ class SubRedditStats(object):
         :param exclude_link:  When true, don't include links.
         :param since_last: When true use info from last submission to determine
             the stop point
+        :returns: True if any submissions were found.
 
         """
         if exclude_self and exclude_link:
@@ -166,6 +174,7 @@ class SubRedditStats(object):
         :param top: One of week, month, year, all
         :param exclude_self: When true, don't include self posts.
         :param exclude_link: When true, include only self posts
+        :returns: True if any submissions were found.
 
         """
         if exclude_self and exclude_link:
@@ -192,12 +201,14 @@ class SubRedditStats(object):
         return True
 
     def process_submitters(self):
+        """Group submissions by author."""
         self.msg('DEBUG: Processing Submitters', 1)
         for submission in self.submissions:
             if submission.author:
                 self.submitters[str(submission.author)].append(submission)
 
     def process_commenters(self):
+        """Group comments by author."""
         num = len(self.submissions)
         self.msg('DEBUG: Processing Commenters on {0} submissions'.format(num),
                  1)
@@ -233,6 +244,7 @@ class SubRedditStats(object):
                 self.commenters[str(comment.author)].append(comment)
 
     def basic_stats(self):
+        """Return a markdown representation of simple statistics."""
         sub_ups = sum(x.ups for x in self.submissions)
         sub_downs = sum(x.downs for x in self.submissions)
         comm_ups = sum(x.ups for x in self.comments)
@@ -263,6 +275,7 @@ class SubRedditStats(object):
         return retval + '\n'
 
     def top_submitters(self, num, num_submissions):
+        """Return a markdown representation of the top submitters."""
         num = min(num, len(self.submitters))
         if num <= 0:
             return ''
@@ -290,6 +303,7 @@ class SubRedditStats(object):
         return retval
 
     def top_commenters(self, num):
+        """Return a markdown representation of the top commenters."""
         score = lambda x: x.ups - x.downs
 
         num = min(num, len(self.commenters))
@@ -308,6 +322,7 @@ class SubRedditStats(object):
         return '{0}\n'.format(retval)
 
     def top_submissions(self, num):
+        """Return a markdown representation of the top submissions."""
         num = min(num, len(self.submissions))
         if num <= 0:
             return ''
@@ -328,6 +343,7 @@ class SubRedditStats(object):
         return tt('{0}\n').format(retval)
 
     def top_comments(self, num):
+        """Return a markdown representation of the top comments."""
         score = lambda x: x.ups - x.downs
 
         num = min(num, len(self.comments))
@@ -346,7 +362,10 @@ class SubRedditStats(object):
 
     def publish_results(self, subreddit, submitters, commenters, submissions,
                         comments, top, debug=False):
+        """Submit the results to the subreddit. Has no return value (None)."""
+
         def timef(timestamp, date_only=False):
+            """Return a suitable string representaation of the timestamp."""
             dtime = datetime.fromtimestamp(timestamp)
             if date_only:
                 retval = dtime.strftime('%Y-%m-%d')
@@ -444,6 +463,11 @@ class SubRedditStats(object):
 
 
 def main():
+    """Provide the entry point to the subreddit_stats command.
+
+    :returns: 0 on success, 1 otherwise
+
+    """
     parser = arg_parser(usage='usage: %prog [options] [SUBREDDIT]')
     parser.add_option('-s', '--submitters', type='int', default=5,
                       help='Number of top submitters to display '
