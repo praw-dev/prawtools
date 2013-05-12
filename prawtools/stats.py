@@ -249,8 +249,8 @@ class SubRedditStats(object):
         sub_downs = sum(x.downs for x in self.submissions)
         comm_ups = sum(x.ups for x in self.comments)
         comm_downs = sum(x.downs for x in self.comments)
-        sub_rate = (86400. * len(self.submissions)
-                    / (self.max_date - self.min_date))
+        sub_duration = self.max_date - self.min_date
+        sub_rate = 86400. * len(self.submissions) / sub_duration
 
         # Compute comment rate
         if self.comments:
@@ -280,7 +280,8 @@ class SubRedditStats(object):
                   ('Downvotes', sub_downs, '{0}%'.format(100 - sub_up_perc),
                    comm_downs, '{0}%'.format(100 - comm_up_perc))]
 
-        retval = '||Submissions|%|Comments|%|\n:-:|--:|--:|--:|--:\n'
+        retval = 'Period: {0:.2f} days\n\n'.format(sub_duration / 86400.)
+        retval += '||Submissions|%|Comments|%|\n:-:|--:|--:|--:|--:\n'
         for quad in values:
             # pylint: disable-msg=W0142
             retval += '__{0}__|{1}|{2}|{3}|{4}\n'.format(*quad)
