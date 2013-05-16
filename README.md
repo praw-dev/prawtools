@@ -4,6 +4,7 @@ PRAWtools is a collection of tools that utilize reddit's API through the Python
 Reddit API Wrapper (PRAW). PRAWtools is currently made up of two utillities:
 
 * modutils
+* reddit_alert
 * subreddit_stats
 
 ## PRAWtools Installation
@@ -54,6 +55,44 @@ at least 2 users.
 prompted for the message, and asked to verify prior to sending the messages.
 
         modutils --message contributors --subject "The message subject" blah
+
+
+## reddit_alert
+
+reddit_alert will notify you when certain keywords are used in comments. For
+instance, to be notified whenever your username is mentioned you might run it
+as:
+
+    reddit_alert bboe
+
+You can receive multiple alerts by specifying multiple keywords separated by
+spaces. If you want to be alerted for keyphrases (those containing spaces) you
+must put quotes around the term:
+
+    reddit_alert bboe praw "reddit api"
+
+By default reddit_alert will only provide links to the same terminal screen (or
+command prompt) it's running in. To be notified via a reddit message specify
+the `-m USER` option:
+
+    reddit_alert -m bboe bboe praw "reddit_api"
+
+When using the `-m USER` you will be prompted to login.
+
+By default comments from __all__ subreddits are considered. If you want to
+restrict the notifications to only a few subreddits use on or more `-s
+SUBREDDIT` options:
+
+    reddit_alert -m bboe -S redditdev -S learnpython bboe praw "reddit_api"
+
+Finally, you may want to ignore notifications from certain users. You can use
+the `-I USER` option to ignore comments from a certain user:
+
+    reddit_alert -m bboe -I bizarrobboe bboe
+
+To see a complete set of available options run:
+
+    reddit_alert --help
 
 
 ## subreddit_stats
