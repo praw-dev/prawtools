@@ -77,7 +77,7 @@ def main():
     try:
         for comment in praw.helpers.comment_stream(session, subreddit,
                                                    verbosity=options.verbose):
-            if comment.author.name.lower() in ignore_users:
+            if comment.author and comment.author.name.lower() in ignore_users:
                 continue
             match = regex.search(comment.body)
             if match:
