@@ -231,9 +231,9 @@ class SubRedditStats(object):
                 continue
             skipped = submission.replace_more_comments()
             if skipped:
-                num = sum(x.count for x in skipped)
+                skip_num = sum(x.count for x in skipped)
                 print('Ignored {0} comments ({1} MoreComment objects)'
-                      .format(num, len(skipped)))
+                      .format(skip_num, len(skipped)))
             self.comments.extend(flatten_tree(submission.comments))
             # pylint: disable-msg=W0212
             for orphans in itervalues(submission._orphaned):
