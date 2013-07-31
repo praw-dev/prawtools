@@ -1,5 +1,6 @@
 """Utility to provide submission and comment statistics in a subreddit."""
 
+import codecs
 import re
 import sys
 import time
@@ -463,17 +464,19 @@ class SubRedditStats(object):
         """Create csv file containing comments and submissions by author."""
         redditors = set(self.submitters.keys()).union(self.commenters.keys())
         mapping = dict((x.lower(), x) for x in redditors)
-        with open(filename, 'w') as outfile:
+        with codecs.open(filename, 'w', encoding='utf-8') as outfile:
             outfile.write('username, type, permalink, score\n')
             for _, redditor in sorted(mapping.items()):
                 for submission in self.submitters.get(redditor, []):
-                    outfile.write('{0}, submission, {1}, {2}\n'
+                    row = u'{0}, submission, {1}, {2}\n'\
                                   .format(redditor, submission.permalink,
-                                          submission.score))
+                                          submission.score)
+                    outfile.write(row)
                 for comment in self.commenters.get(redditor, []):
-                    outfile.write('{0}, comment, {1}, {2}\n'
+                    row = u'{0}, comment, {1}, {2}\n'\
                                   .format(redditor, comment.permalink,
-                                          comment.score))
+                                          comment.score)
+                    outfile.write(row)
 
 
 def main():
