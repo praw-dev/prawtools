@@ -1,5 +1,8 @@
-"""prawtools.mod provides the modutils command that allows you to view and
-change some subreddit options."""
+"""prawtools.mod provides the modutils command.
+
+This command allows you to view and change some subreddit options.
+
+"""
 
 
 from __future__ import print_function, unicode_literals
@@ -21,6 +24,7 @@ class ModUtils(object):
 
     def __init__(self, subreddit, site=None, user=None, pswd=None,
                  verbose=None):
+        """Initialize the ModUtils class by passing in config options."""
         self.reddit = Reddit(str(self), site, disable_update_check=True)
         self.reddit.config.decode_html_entities = True
         self._logged_in = False
@@ -68,7 +72,7 @@ class ModUtils(object):
             for item in self._current_flair:
                 yield item
 
-    def flair_template_sync(self, editable, limit,  # pylint: disable-msg=R0912
+    def flair_template_sync(self, editable, limit,  # pylint: disable=R0912
                             static, sort, use_css, use_text):
         """Synchronize templates with flair that already exists on the site.
 

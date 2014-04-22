@@ -1,5 +1,8 @@
-"""prawtools.alert provides the reddit_alert command that will alert you when
-chosen keywords appear in reddit comments."""
+"""prawtools.alert provides the reddit_alert command.
+
+This command will alert you when chosen keywords appear in reddit comments.
+
+"""
 
 from __future__ import print_function, unicode_literals
 

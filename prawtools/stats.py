@@ -1,5 +1,6 @@
 """Utility to provide submission and comment statistics in a subreddit."""
 
+from __future__ import print_function
 import codecs
 import re
 import sys
@@ -82,6 +83,7 @@ class SubRedditStats(object):
                     raise
 
     def __init__(self, subreddit, site, verbosity):
+        """Initialize the SubRedditStats instance with config options."""
         self.reddit = Reddit(str(self), site, disable_update_check=True)
         self.subreddit = self.reddit.get_subreddit(subreddit)
         self.verbosity = verbosity
@@ -236,10 +238,10 @@ class SubRedditStats(object):
                 print('Ignored {0} comments ({1} MoreComment objects)'
                       .format(skip_num, len(skipped)))
             self.comments.extend(flatten_tree(submission.comments))
-            # pylint: disable-msg=W0212
+            # pylint: disable=W0212
             for orphans in itervalues(submission._orphaned):
                 self.comments.extend(orphans)
-            # pylint: enable-msg=W0212
+            # pylint: enable=W0212
         for comment in self.comments:
             if comment.author:
                 self.commenters[str(comment.author)].append(comment)
@@ -284,9 +286,9 @@ class SubRedditStats(object):
         retval = 'Period: {0:.2f} days\n\n'.format(sub_duration / 86400.)
         retval += '||Submissions|%|Comments|%|\n:-:|--:|--:|--:|--:\n'
         for quad in values:
-            # pylint: disable-msg=W0142
+            # pylint: disable=W0142
             retval += '__{0}__|{1}|{2}|{3}|{4}\n'.format(*quad)
-            # pylint: enable-msg=W0142
+            # pylint: enable=W0142
         return retval + '\n'
 
     def top_submitters(self, num, num_submissions):
@@ -378,7 +380,6 @@ class SubRedditStats(object):
     def publish_results(self, subreddit, submitters, commenters, submissions,
                         comments, top, debug=False):
         """Submit the results to the subreddit. Has no return value (None)."""
-
         def timef(timestamp, date_only=False):
             """Return a suitable string representaation of the timestamp."""
             dtime = datetime.fromtimestamp(timestamp)
@@ -452,7 +453,7 @@ class SubRedditStats(object):
                                        text=body)
                     print(res.permalink)
                     submitted = True
-                except Exception as error:  # pylint: disable-msg=W0703
+                except Exception as error:  # pylint: disable=W0703
                     print('The submission failed:' + str(error))
                     subreddit = None
 
@@ -468,15 +469,13 @@ class SubRedditStats(object):
             outfile.write('username, type, permalink, score\n')
             for _, redditor in sorted(mapping.items()):
                 for submission in self.submitters.get(redditor, []):
-                    row = u'{0}, submission, {1}, {2}\n'\
+                    outfile.write(u'{0}, submission, {1}, {2}\n'
                                   .format(redditor, submission.permalink,
-                                          submission.score)
-                    outfile.write(row)
+                                          submission.score))
                 for comment in self.commenters.get(redditor, []):
-                    row = u'{0}, comment, {1}, {2}\n'\
+                    outfile.write(u'{0}, comment, {1}, {2}\n'
                                   .format(redditor, comment.permalink,
-                                          comment.score)
-                    outfile.write(row)
+                                          comment.score))
 
 
 def main():

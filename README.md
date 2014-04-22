@@ -1,7 +1,8 @@
 # BBOE's PRAWtools
 
-PRAWtools is a collection of tools that utilize reddit's API through the Python
-Reddit API Wrapper (PRAW). PRAWtools is currently made up of two utillities:
+PRAWtools is a collection of tools that utilize reddit's API through
+[PRAW](https://praw.readthedocs.org/). PRAWtools is currently made up of three
+utillities:
 
 * modutils
 * reddit_alert
@@ -28,7 +29,7 @@ Reddit API Wrapper (PRAW). PRAWtools is currently made up of two utillities:
 
 ## modutils
 
-modutils is a tool to assist Reddit community moderators in moderating
+modutils is a tool to assist reddit community moderators in moderating
 their community. At present, it is mostly useful for automatically building
 flair templates from existing user flair, however, it can also be used to
 quickly list banned users, contributors, and moderators.

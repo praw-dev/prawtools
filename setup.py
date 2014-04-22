@@ -35,8 +35,8 @@ setup(name=PACKAGE_NAME,
                    'Topic :: Utilities'],
       install_requires=['praw>=2.1.2', 'update_checker>=0.7'],
       packages=[PACKAGE_NAME],
-      entry_points={'console_scripts':
-                        ['modutils = prawtools.mod:main',
-                         'reddit_alert = prawtools.alert:main',
-                         'subreddit_stats = prawtools.stats:main']},
+      entry_points={
+          'console_scripts': ['modutils = prawtools.mod:main',
+                              'reddit_alert = prawtools.alert:main',
+                              'subreddit_stats = prawtools.stats:main']},
       test_suite='tests')
