@@ -80,10 +80,10 @@ the `-m USER` option:
 When using the `-m USER` you will be prompted to login.
 
 By default comments from __all__ subreddits are considered. If you want to
-restrict the notifications to only a few subreddits use on or more `-s
+restrict the notifications to only a few subreddits use one or more `-s
 SUBREDDIT` options:
 
-    reddit_alert -m bboe -S redditdev -S learnpython bboe praw "reddit_api"
+    reddit_alert -m bboe -s redditdev -s learnpython bboe praw "reddit_api"
 
 Finally, you may want to ignore notifications from certain users. You can use
 the `-I USER` option to ignore comments from a certain user:
