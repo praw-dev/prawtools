@@ -289,9 +289,9 @@ class SubRedditStats(object):
 
         retval = self.post_header.format('Top Submitters\' Top Submissions')
         for (author, submissions) in top_submitters:
-            retval += '0. {0} pts, {1} submissions: {2}\n'.format(
+            retval += '0. {0} pts, {1} submission{2}: {3}\n'.format(
                 sum(x.score for x in submissions), len(submissions),
-                self._user(author))
+                's' if len(submissions) > 1 else '', self._user(author))
             for sub in sorted(submissions, reverse=True,
                               key=lambda x: x.score)[:num_submissions]:
                 title = safe_title(sub)
@@ -299,8 +299,9 @@ class SubRedditStats(object):
                     retval += tt('  0. [{0}]({1})').format(title, sub.url)
                 else:
                     retval += tt('  0. {0}').format(title)
-                retval += ' ({0} pts, [{1} comments]({2}))\n'.format(
+                retval += ' ({0} pts, [{1} comment{2}]({3}))\n'.format(
                     sub.score, sub.num_comments,
+                    's' if sub.num_comments > 1 else '',
                     self._permalink(sub.permalink))
             retval += '\n'
         return retval
@@ -319,9 +320,9 @@ class SubRedditStats(object):
 
         retval = self.post_header.format('Top Commenters')
         for author, comments in top_commenters:
-            retval += '0. {0} ({1} pts, {2} comments)\n'.format(
+            retval += '0. {0} ({1} pts, {2} comment{3})\n'.format(
                 self._user(author), sum(score(x) for x in comments),
-                len(comments))
+                len(comments), 's' if len(comments) > 1 else '')
         return '{0}\n'.format(retval)
 
     def top_submissions(self, num):
@@ -340,8 +341,9 @@ class SubRedditStats(object):
                 retval += tt('0. [{0}]({1})').format(title, sub.url)
             else:
                 retval += tt('0. {0}').format(title)
-            retval += ' by {0} ({1} pts, [{2} comments]({3}))\n'.format(
+            retval += ' by {0} ({1} pts, [{2} comment{3}]({4}))\n'.format(
                 self._user(sub.author), sub.score, sub.num_comments,
+                's' if sub.num_comments > 1 else '',
                 self._permalink(sub.permalink))
         return tt('{0}\n').format(retval)
 
