@@ -248,10 +248,8 @@ class SubRedditStats(object):
 
     def basic_stats(self):
         """Return a markdown representation of simple statistics."""
-        sub_ups = sum(x.ups for x in self.submissions)
-        sub_downs = sum(x.downs for x in self.submissions)
-        comm_ups = sum(x.ups for x in self.comments)
-        comm_downs = sum(x.downs for x in self.comments)
+        sub_score = sum(x.score for x in self.submissions)
+        comm_score = sum(x.score for x in self.comments)
         sub_duration = self.max_date - self.min_date
         sub_rate = 86400. * len(self.submissions) / sub_duration
 
@@ -264,30 +262,18 @@ class SubRedditStats(object):
         else:
             comm_rate = 0
 
-        if sub_ups > 0 or sub_downs > 0:
-            sub_up_perc = sub_ups * 100 / (sub_ups + sub_downs)
-        else:
-            sub_up_perc = 100
-        if comm_ups > 0 or comm_downs > 0:
-            comm_up_perc = comm_ups * 100 / (comm_ups + comm_downs)
-        else:
-            comm_up_perc = 100
-
-        values = [('Total', len(self.submissions), '', len(self.comments), ''),
-                  ('Rate (per day)', '{0:.2f}'.format(sub_rate), '',
-                   '{0:.2f}'.format(comm_rate), ''),
-                  ('Unique Redditors', len(self.submitters), '',
-                   len(self.commenters), ''),
-                  ('Upvotes', sub_ups, '{0}%'.format(sub_up_perc),
-                   comm_ups, '{0}%'.format(comm_up_perc)),
-                  ('Downvotes', sub_downs, '{0}%'.format(100 - sub_up_perc),
-                   comm_downs, '{0}%'.format(100 - comm_up_perc))]
+        values = [('Total', len(self.submissions), len(self.comments)),
+                  ('Rate (per day)', '{0:.2f}'.format(sub_rate),
+                   '{0:.2f}'.format(comm_rate)),
+                  ('Unique Redditors', len(self.submitters),
+                   len(self.commenters)),
+                  ('Combined Score', sub_score, comm_score)]
 
         retval = 'Period: {0:.2f} days\n\n'.format(sub_duration / 86400.)
-        retval += '||Submissions|%|Comments|%|\n:-:|--:|--:|--:|--:\n'
+        retval += '||Submissions|Comments|\n:-:|--:|--:\n'
         for quad in values:
             # pylint: disable=W0142
-            retval += '__{0}__|{1}|{2}|{3}|{4}\n'.format(*quad)
+            retval += '__{0}__|{1}|{2}\n'.format(*quad)
             # pylint: enable=W0142
         return retval + '\n'
 
@@ -321,7 +307,7 @@ class SubRedditStats(object):
 
     def top_commenters(self, num):
         """Return a markdown representation of the top commenters."""
-        score = lambda x: x.ups - x.downs
+        score = lambda x: x.score
 
         num = min(num, len(self.commenters))
         if num <= 0:
@@ -361,7 +347,7 @@ class SubRedditStats(object):
 
     def top_comments(self, num):
         """Return a markdown representation of the top comments."""
-        score = lambda x: x.ups - x.downs
+        score = lambda x: x.score
 
         num = min(num, len(self.comments))
         if num <= 0:
