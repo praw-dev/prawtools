@@ -56,6 +56,10 @@ class SubRedditStats(object):
                                                               tokens[8])
 
     @staticmethod
+    def _pts(points):
+        return '1 pt' if points == 1 else '{} pts'.format(points)
+
+    @staticmethod
     def _user(user):
         if user is None:
             return '_deleted_'
@@ -82,11 +86,12 @@ class SubRedditStats(object):
                 else:
                     raise
 
-    def __init__(self, subreddit, site, verbosity):
+    def __init__(self, subreddit, site, verbosity, distinguished):
         """Initialize the SubRedditStats instance with config options."""
         self.reddit = Reddit(str(self), site, disable_update_check=True)
         self.subreddit = self.reddit.get_subreddit(subreddit)
         self.verbosity = verbosity
+        self.distinguished = distinguished
         self.submissions = []
         self.comments = []
         self.submitters = defaultdict(list)
@@ -207,7 +212,8 @@ class SubRedditStats(object):
         """Group submissions by author."""
         self.msg('DEBUG: Processing Submitters', 1)
         for submission in self.submissions:
-            if submission.author:
+            if submission.author and (self.distinguished or
+                                      submission.distinguished is None):
                 self.submitters[str(submission.author)].append(submission)
 
     def process_commenters(self):
@@ -237,7 +243,9 @@ class SubRedditStats(object):
                 skip_num = sum(x.count for x in skipped)
                 print('Ignored {0} comments ({1} MoreComment objects)'
                       .format(skip_num, len(skipped)))
-            self.comments.extend(flatten_tree(submission.comments))
+            comments = [x for x in flatten_tree(submission.comments) if
+                        self.distinguished or x.distinguished is None]
+            self.comments.extend(comments)
             # pylint: disable=W0212
             for orphans in itervalues(submission._orphaned):
                 self.comments.extend(orphans)
@@ -251,14 +259,16 @@ class SubRedditStats(object):
         sub_score = sum(x.score for x in self.submissions)
         comm_score = sum(x.score for x in self.comments)
         sub_duration = self.max_date - self.min_date
-        sub_rate = 86400. * len(self.submissions) / sub_duration
+        sub_rate = (86400. * len(self.submissions) / sub_duration
+                    if sub_duration else len(self.submissions))
 
         # Compute comment rate
         if self.comments:
             self.comments.sort(key=lambda x: x.created_utc)
             duration = (self.comments[-1].created_utc -
                         self.comments[0].created_utc)
-            comm_rate = 86400. * len(self.comments) / duration
+            comm_rate = (86400. * len(self.comments) / duration
+                         if duration else len(self.comments))
         else:
             comm_rate = 0
 
@@ -289,8 +299,8 @@ class SubRedditStats(object):
 
         retval = self.post_header.format('Top Submitters\' Top Submissions')
         for (author, submissions) in top_submitters:
-            retval += '0. {0} pts, {1} submission{2}: {3}\n'.format(
-                sum(x.score for x in submissions), len(submissions),
+            retval += '0. {0}, {1} submission{2}: {3}\n'.format(
+                self._pts(sum(x.score for x in submissions)), len(submissions),
                 's' if len(submissions) > 1 else '', self._user(author))
             for sub in sorted(submissions, reverse=True,
                               key=lambda x: x.score)[:num_submissions]:
@@ -299,8 +309,8 @@ class SubRedditStats(object):
                     retval += tt('  0. [{0}]({1})').format(title, sub.url)
                 else:
                     retval += tt('  0. {0}').format(title)
-                retval += ' ({0} pts, [{1} comment{2}]({3}))\n'.format(
-                    sub.score, sub.num_comments,
+                retval += ' ({0}, [{1} comment{2}]({3}))\n'.format(
+                    self._pts(sub.score), sub.num_comments,
                     's' if sub.num_comments > 1 else '',
                     self._permalink(sub.permalink))
             retval += '\n'
@@ -320,8 +330,8 @@ class SubRedditStats(object):
 
         retval = self.post_header.format('Top Commenters')
         for author, comments in top_commenters:
-            retval += '0. {0} ({1} pts, {2} comment{3})\n'.format(
-                self._user(author), sum(score(x) for x in comments),
+            retval += '0. {0} ({1}, {2} comment{3})\n'.format(
+                self._user(author), self._pts(sum(score(x) for x in comments)),
                 len(comments), 's' if len(comments) > 1 else '')
         return '{0}\n'.format(retval)
 
@@ -331,8 +341,13 @@ class SubRedditStats(object):
         if num <= 0:
             return ''
 
-        top_submissions = sorted(self.submissions, reverse=True,
-                                 key=lambda x: x.score)[:num]
+        top_submissions = sorted(
+            [x for x in self.submissions if self.distinguished or
+             x.distinguished is None],
+            reverse=True, key=lambda x: x.score)[:num]
+
+        if not top_submissions:
+            return ''
 
         retval = self.post_header.format('Top Submissions')
         for sub in top_submissions:
@@ -341,8 +356,8 @@ class SubRedditStats(object):
                 retval += tt('0. [{0}]({1})').format(title, sub.url)
             else:
                 retval += tt('0. {0}').format(title)
-            retval += ' by {0} ({1} pts, [{2} comment{3}]({4}))\n'.format(
-                self._user(sub.author), sub.score, sub.num_comments,
+            retval += ' by {0} ({1}, [{2} comment{3}]({4}))\n'.format(
+                self._user(sub.author), self._pts(sub.score), sub.num_comments,
                 's' if sub.num_comments > 1 else '',
                 self._permalink(sub.permalink))
         return tt('{0}\n').format(retval)
@@ -360,8 +375,8 @@ class SubRedditStats(object):
         retval = self.post_header.format('Top Comments')
         for comment in top_comments:
             title = safe_title(comment.submission)
-            retval += tt('0. {0} pts: {1}\'s [comment]({2}) in {3}\n').format(
-                score(comment), self._user(comment.author),
+            retval += tt('0. {0}: {1}\'s [comment]({2}) in {3}\n').format(
+                self._pts(score(comment)), self._user(comment.author),
                 self._permalink(comment.permalink), title)
         return tt('{0}\n').format(retval)
 
@@ -492,6 +507,11 @@ def main():
     parser.add_option('-t', '--top',
                       help=('Run on top submissions either by day, week, '
                             'month, year, or all'))
+    parser.add_option('', '--distinguished', action='store_true',
+                      help=('Include distinguished subissions and '
+                            'comments (default: False). Note that regular '
+                            'comments of distinguished submissions will still '
+                            'be included.'))
     parser.add_option('', '--no-self', action='store_true',
                       help=('Do not include self posts (and their comments) in'
                             ' the calculation.'))
@@ -529,7 +549,8 @@ def main():
     else:
         submission_reddit = subject_reddit
 
-    srs = SubRedditStats(subject_reddit, options.site, options.verbose)
+    srs = SubRedditStats(subject_reddit, options.site, options.verbose,
+                         options.distinguished)
     srs.login(options.user, options.pswd)
     if options.prev:
         srs.prev_stat(options.prev)
