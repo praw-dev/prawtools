@@ -57,7 +57,7 @@ class SubRedditStats(object):
 
     @staticmethod
     def _pts(points):
-        return '1 pt' if points == 1 else '{} pts'.format(points)
+        return '1 pt' if points == 1 else '{0} pts'.format(points)
 
     @staticmethod
     def _user(user):
