@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 import codecs
+import getpass
 import re
 import sys
 import time
@@ -104,7 +105,11 @@ class SubRedditStats(object):
         """Login and provide debugging output if so wanted."""
         if self.verbosity > 0:
             print('Logging in')
-        self.reddit.login(user, pswd)
+        try:
+            self.reddit.login(user, pswd)
+        except TypeError:
+            print('TypeError encountered. Attempting to re-encode to ascii...')
+            self.reddit.login(user.encode('ascii', 'ignore'), pswd.encode('ascii', 'ignore'))
 
     def msg(self, msg, level, overwrite=False):
         """Output a messaage to the screen if the verbosity is sufficient."""
@@ -526,6 +531,7 @@ def main():
                       help='Save result csv to named file.')
 
     options, args = parser.parse_args()
+
     if len(args) != 1:
         sys.stdout.write('Enter subreddit name: ')
         sys.stdout.flush()
@@ -534,6 +540,21 @@ def main():
             parser.error('No subreddit name entered')
     else:
         subject_reddit = args[0]
+
+    if options.user is None:
+        sys.stdout.write('Enter reddit username: ')
+        sys.stdout.flush()
+        r_username = sys.stdin.readline().strip()
+        if not r_username:
+            parser.error('No username entered')
+    else:
+        r_username = options.user
+    if options.pswd is None:
+        r_password = getpass.getpass()
+        if not r_password:
+            parser.error('No password entered')
+    else:
+        r_password = options.pswd
 
     if not options.disable_update_check:  # Check for updates
         update_check('prawtools', __version__)
@@ -551,7 +572,7 @@ def main():
 
     srs = SubRedditStats(subject_reddit, options.site, options.verbose,
                          options.distinguished)
-    srs.login(options.user, options.pswd)
+    srs.login(r_username, r_password)
     if options.prev:
         srs.prev_stat(options.prev)
     if options.top:
