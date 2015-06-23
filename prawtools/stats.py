@@ -5,6 +5,7 @@ import codecs
 import re
 import sys
 import time
+import webbrowser
 from collections import defaultdict
 from datetime import datetime
 from praw import Reddit
@@ -100,11 +101,22 @@ class SubRedditStats(object):
         self.max_date = time.time() - DAYS_IN_SECONDS * 3
         self.prev_srs = None
 
-    def login(self, user, pswd):
+    def login(self, id, secret):
         """Login and provide debugging output if so wanted."""
         if self.verbosity > 0:
-            print('Logging in')
-        self.reddit.login(user, pswd)
+            print('Logging in using OAuth...')
+        if self.verbosity > 1:
+            print('Client ID: ' + id)
+        self.reddit.set_oauth_app_info(client_id=id, client_secret=secret,
+                                       redirect_uri='http://127.0.0.1:65010/authorize_callback')
+        url = self.reddit.get_authorize_url('srs', ['identity', 'read', 'submit'], True)
+        webbrowser.open(url)
+        sys.stdout.write('Code: ')
+        sys.stdout.flush()
+        code = sys.stdin.readline().strip()
+        access_info = self.reddit.get_access_information(code)
+        self.reddit.set_access_credentials(**access_info)
+        print("Logged in as " + self.reddit.get_me().name + '.')
 
     def msg(self, msg, level, overwrite=False):
         """Output a messaage to the screen if the verbosity is sufficient."""
@@ -490,10 +502,10 @@ def main():
     parser = arg_parser(usage='usage: %prog [options] [SUBREDDIT]')
     parser.add_option('-s', '--submitters', type='int', default=5,
                       help='Number of top submitters to display '
-                      '[default %default]')
+                           '[default %default]')
     parser.add_option('-c', '--commenters', type='int', default=10,
                       help='Number of top commenters to display '
-                      '[default %default]')
+                           '[default %default]')
     parser.add_option('-a', '--after',
                       help='Submission ID to fetch after')
     parser.add_option('-d', '--days', type='int', default=32,
@@ -508,7 +520,7 @@ def main():
                       help=('Run on top submissions either by day, week, '
                             'month, year, or all'))
     parser.add_option('', '--distinguished', action='store_true',
-                      help=('Include distinguished subissions and '
+                      help=('Include distinguished submissions and '
                             'comments (default: False). Note that regular '
                             'comments of distinguished submissions will still '
                             'be included.'))
@@ -551,7 +563,7 @@ def main():
 
     srs = SubRedditStats(subject_reddit, options.site, options.verbose,
                          options.distinguished)
-    srs.login(options.user, options.pswd)
+    srs.login(options.client_id, options.client_secret)
     if options.prev:
         srs.prev_stat(options.prev)
     if options.top:

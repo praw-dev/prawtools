@@ -13,6 +13,8 @@ def arg_parser(*args, **kwargs):
                  'prompted for a username.'),
         'pswd': ('The password to use for login. Can only be used in '
                  'combination with "--user". See help for "--user".'),
+        'client_id': 'Client ID for OAuth',
+        'client_secret': 'Client secret for OAuth',
         'update': 'Prevent the checking for prawtools package updates.'}
 
     kwargs['version'] = 'BBoe\'s PRAWtools {0}'.format(__version__)
@@ -26,6 +28,8 @@ def arg_parser(*args, **kwargs):
     group.add_option('-S', '--site', help=msg['site'])
     group.add_option('-u', '--user', help=msg['user'])
     group.add_option('-p', '--pswd', help=msg['pswd'])
+    group.add_option('-i', '--client_id', help=msg['client_id'])
+    group.add_option('-k', '--client_secret', help=msg['client_secret'])
     parser.add_option_group(group)
 
     return parser
