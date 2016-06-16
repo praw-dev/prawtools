@@ -27,7 +27,6 @@ def safe_title(submission):
 
 
 class SubRedditStats(object):
-
     """Contain all the functionality of the subreddit_stats command."""
 
     post_prefix = tt('Subreddit Stats:')
@@ -318,20 +317,18 @@ class SubRedditStats(object):
 
     def top_commenters(self, num):
         """Return a markdown representation of the top commenters."""
-        score = lambda x: x.score
-
         num = min(num, len(self.commenters))
         if num <= 0:
             return ''
 
         top_commenters = sorted(iteritems(self.commenters), reverse=True,
-                                key=lambda x: (sum(score(y) for y in x[1]),
+                                key=lambda x: (sum(y.score for y in x[1]),
                                                len(x[1])))[:num]
 
         retval = self.post_header.format('Top Commenters')
         for author, comments in top_commenters:
             retval += '0. {0} ({1}, {2} comment{3})\n'.format(
-                self._user(author), self._pts(sum(score(x) for x in comments)),
+                self._user(author), self._pts(sum(x.score for x in comments)),
                 len(comments), 's' if len(comments) > 1 else '')
         return '{0}\n'.format(retval)
 
@@ -364,19 +361,17 @@ class SubRedditStats(object):
 
     def top_comments(self, num):
         """Return a markdown representation of the top comments."""
-        score = lambda x: x.score
-
         num = min(num, len(self.comments))
         if num <= 0:
             return ''
 
         top_comments = sorted(self.comments, reverse=True,
-                              key=score)[:num]
+                              key=lambda x: x.score)[:num]
         retval = self.post_header.format('Top Comments')
         for comment in top_comments:
             title = safe_title(comment.submission)
             retval += tt('0. {0}: {1}\'s [comment]({2}) in {3}\n').format(
-                self._pts(score(comment)), self._user(comment.author),
+                self._pts(comment.score), self._user(comment.author),
                 self._permalink(comment.permalink), title)
         return tt('{0}\n').format(retval)
 

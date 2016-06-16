@@ -68,8 +68,8 @@ def main():
     print('Alerting on:')
     for item in sorted(args):
         print(' * {0}'.format(item))
-    print ('using the comment stream: http://www.reddit.com/r/{0}/comments'
-           .format(subreddit))
+    print('using the comment stream: http://www.reddit.com/r/{0}/comments'
+          .format(subreddit))
 
     # Build ignore set
     if options.ignore_user:

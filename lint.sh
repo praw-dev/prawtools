@@ -2,7 +2,7 @@
 
 dir=$(dirname $0)
 
-# flake8 (runs pep8 and pyflakes)
+# flake8 (runs pycodestyle and pyflakes)
 flake8 $dir/prawtools
 if [ $? -ne 0 ]; then
     echo "Exiting due to flake8 errors. Fix and re-run to finish tests."
@@ -16,7 +16,7 @@ if [ -n "$output" ]; then
     echo -e "$output"
 fi
 
-# pep257
-find $dir/prawtools -name [A-Za-z_]\*.py | xargs pep257
+# pydocstyle
+find $dir/prawtools -name [A-Za-z_]\*.py | xargs pydocstyle
 
 exit 0

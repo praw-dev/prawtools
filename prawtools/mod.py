@@ -18,8 +18,11 @@ from . import __version__
 from .helpers import arg_parser
 
 
-class ModUtils(object):
+if sys.version[0] < 3:
+    input = raw_input  # NOQA
 
+
+class ModUtils(object):
     """Class that provides all the modutils functionality."""
 
     def __init__(self, subreddit, site=None, user=None, pswd=None,
@@ -177,7 +180,7 @@ class ModUtils(object):
         print('You are about to send the following '
               'message to the users %s:' % ', '.join([str(x) for x in users]))
         print('---BEGIN MESSAGE---\n%s\n---END MESSAGE---' % msg)
-        if raw_input('Are you sure? yes/[no]: ').lower() not in ['y', 'yes']:
+        if input('Are you sure? yes/[no]: ').lower() not in ['y', 'yes']:
             print('Message sending aborted.')
             return
         for user in users:
