@@ -8,7 +8,6 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from praw import Reddit
-from praw.exceptions import APIException
 from praw.models import Redditor, Submission
 from six import iteritems, itervalues, text_type as tt
 from update_checker import update_check
@@ -65,18 +64,6 @@ class SubRedditStats(object):
         elif isinstance(user, Redditor):
             user = str(user)
         return tt('[{0}](/user/{1})').format(user.replace('_', r'\_'), user)
-
-    @staticmethod
-    def _submit(func, *args, **kwargs):
-        def sleep(sleep_time):
-            print('\tSleeping for {0} seconds'.format(sleep_time))
-            time.sleep(sleep_time)
-
-        while True:
-            try:
-                return func(*args, **kwargs)
-            except APIException as error:
-                sleep(error.sleep_time)
 
     def __init__(self, subreddit, site, verbosity, distinguished):
         """Initialize the SubRedditStats instance with config options."""
@@ -391,9 +378,9 @@ class SubRedditStats(object):
         submitted = False
         while not debug and not submitted:
             if subreddit:  # Verify the user wants to submit to the subreddit
-                msg = ('You are about to submit to subreddit {0!r} as {1!r}.\n'
+                msg = ('You are about to submit to subreddit {} as {}.\n'
                        'Are you sure? yes/[no]: '
-                       .format(subreddit, str(self.reddit.user)))
+                       .format(subreddit, self.reddit.config.username))
                 sys.stdout.write(msg)
                 sys.stdout.flush()
                 if sys.stdin.readline().strip().lower() not in ['y', 'yes']:
@@ -417,14 +404,12 @@ class SubRedditStats(object):
                 title = base_title
 
             if subreddit:
-                # Attempt to make the submission
-                try:
-                    res = self._submit(self.reddit.submit, subreddit, title,
-                                       text=body)
-                    print(res.permalink)
+                subreddit = self.reddit.subreddit(subreddit)
+                try:  # Attempt to make the submission
+                    print(subreddit.submit(title, selftext=body).permalink)
                     submitted = True
                 except Exception as error:
-                    print('The submission failed:' + str(error))
+                    print('The submission failed: {!r}'.format(error))
                     subreddit = None
 
         if not submitted:
