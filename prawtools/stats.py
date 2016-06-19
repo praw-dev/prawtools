@@ -221,10 +221,8 @@ class SubRedditStats(object):
             comments = [x for x in submission.comments.list() if
                         self.distinguished or x.distinguished is None]
             self.comments.extend(comments)
-            # pylint: disable=W0212
             for orphans in itervalues(submission._orphaned):
                 self.comments.extend(orphans)
-            # pylint: enable=W0212
         for comment in self.comments:
             if comment.author:
                 self.commenters[str(comment.author)].append(comment)
@@ -257,9 +255,7 @@ class SubRedditStats(object):
         retval = 'Period: {0:.2f} days\n\n'.format(sub_duration / 86400.)
         retval += '||Submissions|Comments|\n:-:|--:|--:\n'
         for quad in values:
-            # pylint: disable=W0142
             retval += '__{0}__|{1}|{2}\n'.format(*quad)
-            # pylint: enable=W0142
         return retval + '\n'
 
     def top_submitters(self, num, num_submissions):
@@ -427,7 +423,7 @@ class SubRedditStats(object):
                                        text=body)
                     print(res.permalink)
                     submitted = True
-                except Exception as error:  # pylint: disable=W0703
+                except Exception as error:
                     print('The submission failed:' + str(error))
                     subreddit = None
 
