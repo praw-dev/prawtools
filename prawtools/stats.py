@@ -31,7 +31,7 @@ class SubRedditStats(object):
     post_footer = tt('>Generated with [BBoe](/u/bboe)\'s [Subreddit Stats]'
                      '(https://github.com/praw-dev/prawtools)  \n{}'
                      'SRS Marker: {}')
-    re_marker = re.compile(r'SRS Marker: (\d+)')
+    re_marker = re.compile('SRS Marker: (\d+)')
 
     @staticmethod
     def _previous_max(submission):
@@ -58,7 +58,7 @@ class SubRedditStats(object):
             return '_deleted_'
         elif isinstance(user, Redditor):
             user = str(user)
-        return tt('[{}](/user/{})').format(user.replace('_', r'\_'), user)
+        return tt('[{}](/user/{})').format(user.replace('_', '\_'), user)
 
     def __init__(self, subreddit, site, verbosity, distinguished):
         """Initialize the SubRedditStats instance with config options."""
