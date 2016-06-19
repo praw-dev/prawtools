@@ -1,0 +1,19 @@
+after_success: coveralls
+cache: pip
+install: pip install coveralls flake8 pydocstyle
+language: python
+matrix:
+  allow_failures:
+    - python: nightly
+  fast_finish: true
+python:
+  - 2.7
+  - 3.3
+  - 3.4
+  - 3.5
+  - nightly
+script:
+  - flake8
+  - pydocstyle
+  - coverage run --source=prawcore setup.py test
+sudo: false
