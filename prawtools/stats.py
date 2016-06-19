@@ -8,10 +8,8 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from praw import Reddit
-from praw.errors import ExceptionList, RateLimitExceeded
-from praw.helpers import flatten_tree
-from praw.objects import Redditor
-from requests.exceptions import HTTPError
+from praw.exceptions import APIException
+from praw.models import Redditor, Submission
 from six import iteritems, itervalues, text_type as tt
 from update_checker import update_check
 from . import __version__
@@ -46,13 +44,15 @@ class SubRedditStats(object):
             sys.exit(1)
 
     @staticmethod
-    def _permalink(permalink):
-        tokens = permalink.split('/')
-        if tokens[8] == '':  # submission
-            return tt('/comments/{0}/_/').format(tokens[6])
+    def _permalink(item):
+        if isinstance(item, Submission):
+            return tt('/comments/{}/_/').format(item.id)
         else:  # comment
-            return tt('/comments/{0}/_/{1}?context=1').format(tokens[6],
-                                                              tokens[8])
+            import pprint
+            pprint.pprint(vars(item))
+            raise 'Foo'
+            # return tt('/comments/{}/_/{}?context=1').format(tokens[6],
+            #                                                  tokens[8])
 
     @staticmethod
     def _pts(points):
@@ -75,20 +75,14 @@ class SubRedditStats(object):
         while True:
             try:
                 return func(*args, **kwargs)
-            except RateLimitExceeded as error:
+            except APIException as error:
                 sleep(error.sleep_time)
-            except ExceptionList as exception_list:
-                for error in exception_list.errors:
-                    if isinstance(error, RateLimitExceeded):
-                        sleep(error.sleep_time)
-                        break
-                else:
-                    raise
 
     def __init__(self, subreddit, site, verbosity, distinguished):
         """Initialize the SubRedditStats instance with config options."""
-        self.reddit = Reddit(str(self), site, disable_update_check=True)
-        self.subreddit = self.reddit.get_subreddit(subreddit)
+        self.reddit = Reddit(site, disable_update_check=True,
+                             user_agent='prawtools/{}'.format(__version__))
+        self.subreddit = self.reddit.subreddit(subreddit)
         self.verbosity = verbosity
         self.distinguished = distinguished
         self.submissions = []
@@ -98,12 +92,6 @@ class SubRedditStats(object):
         self.min_date = 0
         self.max_date = time.time() - DAYS_IN_SECONDS * 3
         self.prev_srs = None
-
-    def login(self, user, pswd):
-        """Login and provide debugging output if so wanted."""
-        if self.verbosity > 0:
-            print('Logging in')
-        self.reddit.login(user, pswd)
 
     def msg(self, msg, level, overwrite=False):
         """Output a messaage to the screen if the verbosity is sufficient."""
@@ -117,9 +105,8 @@ class SubRedditStats(object):
 
     def prev_stat(self, prev_url):
         """Load the previous subreddit stats page."""
-        submission = self.reddit.get_submission(prev_url)
-        self.min_date = self._previous_max(submission)
-        self.prev_srs = prev_url
+        self.prev_srs = self.reddit.submission(prev_url)
+        self.min_date = self._previous_max(self.prev_srs)
 
     def fetch_recent_submissions(self, max_duration, after, exclude_self,
                                  exclude_link, since_last=True):
@@ -143,7 +130,7 @@ class SubRedditStats(object):
             self.min_date = self.max_date - DAYS_IN_SECONDS * max_duration
         params = {'after': after} if after else None
         self.msg('DEBUG: Fetching submissions', 1)
-        for submission in self.subreddit.get_new(limit=None, params=params):
+        for submission in self.subreddit.new(limit=None, params=params):
             if submission.created_utc > self.max_date:
                 continue
             if submission.created_utc <= self.min_date:
@@ -157,7 +144,7 @@ class SubRedditStats(object):
                 if self.prev_srs is None:  # Only use the most recent
                     self.min_date = max(self.min_date,
                                         self._previous_max(submission))
-                    self.prev_srs = submission.permalink
+                    self.prev_srs = submission
                 continue
             if exclude_self and submission.is_self:
                 continue
@@ -190,7 +177,7 @@ class SubRedditStats(object):
             raise TypeError('{0!r} is not a valid top value'.format(top))
         self.msg('DEBUG: Fetching submissions', 1)
         params = {'t': top}
-        for submission in self.subreddit.get_top(limit=None, params=params):
+        for submission in self.subreddit.top(limit=None, params=params):
             if exclude_self and submission.is_self:
                 continue
             if exclude_link and not submission.is_self:
@@ -221,28 +208,17 @@ class SubRedditStats(object):
         self.msg('DEBUG: Processing Commenters on {0} submissions'.format(num),
                  1)
         for i, submission in enumerate(self.submissions):
-            # Explicitly fetch as many comments as possible by top sort
-            # Note that this is the first time the complete submission object
-            # is obtained. Only a partial object was returned when getting the
-            # subreddit listings.
-            try:
-                submission = self.reddit.get_submission(submission.permalink,
-                                                        comment_limit=None,
-                                                        comment_sort='top')
-            except HTTPError as exc:
-                print('Ignoring comments on {0} due to HTTP status {1}'
-                      .format(submission.url, exc.response.status_code))
-                continue
+            submission.comment_sort = 'top'
             self.msg('{0}/{1} submissions'.format(i + 1, num), 2,
                      overwrite=True)
             if submission.num_comments == 0:
                 continue
-            skipped = submission.replace_more_comments()
+            skipped = submission.comments.replace_more()
             if skipped:
                 skip_num = sum(x.count for x in skipped)
                 print('Ignored {0} comments ({1} MoreComment objects)'
                       .format(skip_num, len(skipped)))
-            comments = [x for x in flatten_tree(submission.comments) if
+            comments = [x for x in submission.comments.list() if
                         self.distinguished or x.distinguished is None]
             self.comments.extend(comments)
             # pylint: disable=W0212
@@ -311,7 +287,7 @@ class SubRedditStats(object):
                 retval += ' ({0}, [{1} comment{2}]({3}))\n'.format(
                     self._pts(sub.score), sub.num_comments,
                     's' if sub.num_comments > 1 else '',
-                    self._permalink(sub.permalink))
+                    self._permalink(sub))
             retval += '\n'
         return retval
 
@@ -356,7 +332,7 @@ class SubRedditStats(object):
             retval += ' by {0} ({1}, [{2} comment{3}]({4}))\n'.format(
                 self._user(sub.author), self._pts(sub.score), sub.num_comments,
                 's' if sub.num_comments > 1 else '',
-                self._permalink(sub.permalink))
+                self._permalink(sub))
         return tt('{0}\n').format(retval)
 
     def top_comments(self, num):
@@ -372,7 +348,7 @@ class SubRedditStats(object):
             title = safe_title(comment.submission)
             retval += tt('0. {0}: {1}\'s [comment]({2}) in {3}\n').format(
                 self._pts(comment.score), self._user(comment.author),
-                self._permalink(comment.permalink), title)
+                self._permalink(comment), title)
         return tt('{0}\n').format(retval)
 
     def publish_results(self, subreddit, submitters, commenters, submissions,
@@ -546,7 +522,6 @@ def main():
 
     srs = SubRedditStats(subject_reddit, options.site, options.verbose,
                          options.distinguished)
-    srs.login(options.user, options.pswd)
     if options.prev:
         srs.prev_stat(options.prev)
     if options.top:

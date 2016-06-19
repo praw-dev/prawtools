@@ -1,7 +1,7 @@
 # BBOE's PRAWtools
 
 PRAWtools is a collection of tools that utilize reddit's API through
-[PRAW](https://praw.readthedocs.org/). PRAWtools is currently made up of three
+[PRAW](https://praw.readthedocs.io/). PRAWtools is currently made up of three
 utillities:
 
 * modutils
@@ -21,7 +21,7 @@ utillities:
     sudo easy_install pip
     sudo pip install prawtools
 
-### Mac OS X installation (only tested with Lion)
+### Mac OS X installation
 
     sudo easy_install pip
     sudo pip install prawtools
@@ -104,28 +104,40 @@ To see the what sort of output subreddit stats generates check out
 
 The tool will only analyze up to 1,000 submissions.
 
+### Preparation
+
+In order to run subreddit_stats you will need to create a `praw.ini` file in
+the same directory that you run the scripts in. This file should look like:
+
+```
+[DEFAULT]
+client_id: XXX
+client_secret: XXX
+password: XXX
+username: XXX
+```
 
 ### subreddit_stats examples
 
 0. Generate stats for subreddit __foo__ for the last 30 days with extra
-verbose output. Post results to subreddit __bar__ as user __user__.
+verbose output. Post results to subreddit __bar__.
 
-        subreddit_stats -d30 -vv -R bar -u user foo
-        
- The -d30 flag will get all submissions from the last 30 days, but will ignore the 
-last three days. As a result, you may experience messages like "No submissions 
-found". To analyze one month, try:
+        subreddit_stats -d30 -vv -R bar foo
 
-        subreddit_stats -tmonth -vv -R bar -u user foo
-        
- Similarly, to analyze one year:
+The -d30 flag will get all submissions from the last 30 days, but will ignore
+the last three days. As a result, you may experience messages like "No
+submissions found". To analyze one month, try:
 
-        subreddit_stats -tyear -vv -R bar -u user foo
+        subreddit_stats -tmonth -vv -R bar foo
+
+Similarly, to analyze one year:
+
+        subreddit_stats -tyear -vv -R bar foo
 
 0. Generate stats for subreddit __blah__ for the top posts of the year. Post
-the results to the same subreddit as user __resu__.
+the results to the same subreddit.
 
-        subreddit_stats --top year -u resu blah
+        subreddit_stats --top year blah
 
 0. To see other possible options
 
