@@ -1,0 +1,102 @@
+{
+  "http_interactions": [
+    {
+      "recorded_at": "2016-06-19T22:37:13",
+      "request": {
+        "body": {
+          "encoding": "utf-8",
+          "string": "grant_type=password&password=<PASSWORD>&username=<USERNAME>"
+        },
+        "headers": {
+          "Accept": "*/*",
+          "Accept-Encoding": "identity",
+          "Authorization": "Basic <BASIC_AUTH>",
+          "Connection": "keep-alive",
+          "Content-Length": "57",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": "prawtools/0.19 PRAW/4.0.0b4 prawcore/0.0.8"
+        },
+        "method": "POST",
+        "uri": "https://www.reddit.com/api/v1/access_token"
+      },
+      "response": {
+        "body": {
+          "encoding": "UTF-8",
+          "string": "{\"access_token\": \"fIfk2O93a5hlbFVYNa0gBGX0--A\", \"token_type\": \"bearer\", \"expires_in\": 3600, \"scope\": \"*\"}"
+        },
+        "headers": {
+          "CF-RAY": "2b5a76d9039922b2-LAX",
+          "Connection": "keep-alive",
+          "Content-Length": "105",
+          "Content-Type": "application/json; charset=UTF-8",
+          "Date": "Sun, 19 Jun 2016 22:37:13 GMT",
+          "Server": "cloudflare-nginx",
+          "Set-Cookie": "__cfduid=d1fd818e9b3e345ac537a2a2dbbc291571466375832; expires=Mon, 19-Jun-17 22:37:12 GMT; path=/; domain=.reddit.com; HttpOnly",
+          "Strict-Transport-Security": "max-age=15552000; includeSubDomains; preload",
+          "X-Moose": "majestic",
+          "cache-control": "max-age=0, must-revalidate",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "SAMEORIGIN",
+          "x-xss-protection": "1; mode=block"
+        },
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "url": "https://www.reddit.com/api/v1/access_token"
+      }
+    },
+    {
+      "recorded_at": "2016-06-19T22:37:13",
+      "request": {
+        "body": {
+          "encoding": "utf-8",
+          "string": ""
+        },
+        "headers": {
+          "Accept": "*/*",
+          "Accept-Encoding": "identity",
+          "Authorization": "bearer fIfk2O93a5hlbFVYNa0gBGX0--A",
+          "Connection": "keep-alive",
+          "Cookie": "loidcreated=2016-06-19T22%3A37%3A12.565Z; __cfduid=d1fd818e9b3e345ac537a2a2dbbc291571466375832; loid=aP0domHXG1JODUJwAH",
+          "User-Agent": "prawtools/0.19 PRAW/4.0.0b4 prawcore/0.0.8"
+        },
+        "method": "GET",
+        "uri": "https://oauth.reddit.com/comments/10agf2/?sort=best&limit=2048&raw_json=1"
+      },
+      "response": {
+        "body": {
+          "encoding": "UTF-8",
+          "string": "[{\"kind\": \"Listing\", \"data\": {\"modhash\": null, \"children\": [{\"kind\": \"t3\", \"data\": {\"domain\": \"self.bboe\", \"banned_by\": null, \"media_embed\": {}, \"subreddit\": \"bboe\", \"selftext_html\": \"\\u003C!-- SC_OFF --\\u003E\\u003Cdiv class=\\\"md\\\"\\u003E\\u003Ctable\\u003E\\u003Cthead\\u003E\\n\\u003Ctr\\u003E\\n\\u003Cth align=\\\"center\\\"\\u003E\\u003C/th\\u003E\\n\\u003Cth align=\\\"right\\\"\\u003ESubmissions\\u003C/th\\u003E\\n\\u003Cth align=\\\"right\\\"\\u003E%\\u003C/th\\u003E\\n\\u003Cth align=\\\"right\\\"\\u003EComments\\u003C/th\\u003E\\n\\u003Cth align=\\\"right\\\"\\u003E%\\u003C/th\\u003E\\n\\u003C/tr\\u003E\\n\\u003C/thead\\u003E\\u003Ctbody\\u003E\\n\\u003Ctr\\u003E\\n\\u003Ctd align=\\\"center\\\"\\u003E\\u003Cstrong\\u003ETotal\\u003C/strong\\u003E\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E3\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E0\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E\\u003C/td\\u003E\\n\\u003C/tr\\u003E\\n\\u003Ctr\\u003E\\n\\u003Ctd align=\\\"center\\\"\\u003E\\u003Cstrong\\u003EUnique Redditors\\u003C/strong\\u003E\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E1\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E0\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E\\u003C/td\\u003E\\n\\u003C/tr\\u003E\\n\\u003Ctr\\u003E\\n\\u003Ctd align=\\\"center\\\"\\u003E\\u003Cstrong\\u003EUpvotes\\u003C/strong\\u003E\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E3\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E100%\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E0\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E100%\\u003C/td\\u003E\\n\\u003C/tr\\u003E\\n\\u003Ctr\\u003E\\n\\u003Ctd align=\\\"center\\\"\\u003E\\u003Cstrong\\u003EDownvotes\\u003C/strong\\u003E\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E0\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E0%\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E0\\u003C/td\\u003E\\n\\u003Ctd align=\\\"right\\\"\\u003E0%\\u003C/td\\u003E\\n\\u003C/tr\\u003E\\n\\u003C/tbody\\u003E\\u003C/table\\u003E\\n\\n\\u003Chr/\\u003E\\n\\n\\u003Ch3\\u003ETop Submitters\\u0026#39; Top Submissions\\u003C/h3\\u003E\\n\\n\\u003Col\\u003E\\n\\u003Cli\\u003E3 pts, 3 submissions: \\u003Ca href=\\\"/user/bboe\\\"\\u003Ebboe\\u003C/a\\u003E\\n\\n\\u003Col\\u003E\\n\\u003Cli\\u003Etest private post (1 pts, \\u003Ca href=\\\"/comments/n5p0l/_/\\\"\\u003E0 comments\\u003C/a\\u003E)\\u003C/li\\u003E\\n\\u003Cli\\u003E2012-03-22 top submissions (1 pts, \\u003Ca href=\\\"/comments/r9beq/_/\\\"\\u003E0 comments\\u003C/a\\u003E)\\u003C/li\\u003E\\n\\u003Cli\\u003E\\u003Ca href=\\\"http://google.com\\\"\\u003EChase Bank to Open Isla Vista\\u2019s Only Full-Service Branch\\u003C/a\\u003E (1 pts, \\u003Ca href=\\\"/comments/109kp6/_/\\\"\\u003E0 comments\\u003C/a\\u003E)\\u003C/li\\u003E\\n\\u003C/ol\\u003E\\u003C/li\\u003E\\n\\u003C/ol\\u003E\\n\\n\\u003Chr/\\u003E\\n\\n\\u003Ch3\\u003ETop Submissions\\u003C/h3\\u003E\\n\\n\\u003Col\\u003E\\n\\u003Cli\\u003Etest private post by \\u003Ca href=\\\"/user/bboe\\\"\\u003Ebboe\\u003C/a\\u003E (1 pts, \\u003Ca href=\\\"/comments/n5p0l/_/\\\"\\u003E0 comments\\u003C/a\\u003E)\\u003C/li\\u003E\\n\\u003Cli\\u003E2012-03-22 top submissions by \\u003Ca href=\\\"/user/bboe\\\"\\u003Ebboe\\u003C/a\\u003E (1 pts, \\u003Ca href=\\\"/comments/r9beq/_/\\\"\\u003E0 comments\\u003C/a\\u003E)\\u003C/li\\u003E\\n\\u003Cli\\u003E\\u003Ca href=\\\"http://google.com\\\"\\u003EChase Bank to Open Isla Vista\\u2019s Only Full-Service Branch\\u003C/a\\u003E by \\u003Ca href=\\\"/user/bboe\\\"\\u003Ebboe\\u003C/a\\u003E (1 pts, \\u003Ca href=\\\"/comments/109kp6/_/\\\"\\u003E0 comments\\u003C/a\\u003E)\\u003C/li\\u003E\\n\\u003C/ol\\u003E\\n\\n\\u003Cblockquote\\u003E\\n\\u003Cp\\u003EGenerated with \\u003Ca href=\\\"/u/bboe\\\"\\u003EBBoe\\u003C/a\\u003E\\u0026#39;s \\u003Ca href=\\\"https://github.com/praw-dev/prawtools\\\"\\u003ESubreddit Stats\\u003C/a\\u003E\\u003Cbr/\\u003E\\nSRS Marker: 1348258786.0\\u003C/p\\u003E\\n\\u003C/blockquote\\u003E\\n\\u003C/div\\u003E\\u003C!-- SC_ON --\\u003E\", \"selftext\": \"||Submissions|%|Comments|%|\\n:-:|--:|--:|--:|--:\\n__Total__|3||0|\\n__Unique Redditors__|1||0|\\n__Upvotes__|3|100%|0|100%\\n__Downvotes__|0|0%|0|0%\\n\\n---\\n###Top Submitters' Top Submissions\\n0. 3 pts, 3 submissions: [bboe](/user/bboe)\\n  0. test private post (1 pts, [0 comments](/comments/n5p0l/_/))\\n  0. 2012-03-22 top submissions (1 pts, [0 comments](/comments/r9beq/_/))\\n  0. [Chase Bank to Open Isla Vista\\u2019s Only Full-Service Branch](http://google.com) (1 pts, [0 comments](/comments/109kp6/_/))\\n\\n---\\n###Top Submissions\\n0. test private post by [bboe](/user/bboe) (1 pts, [0 comments](/comments/n5p0l/_/))\\n0. 2012-03-22 top submissions by [bboe](/user/bboe) (1 pts, [0 comments](/comments/r9beq/_/))\\n0. [Chase Bank to Open Isla Vista\\u2019s Only Full-Service Branch](http://google.com) by [bboe](/user/bboe) (1 pts, [0 comments](/comments/109kp6/_/))\\n\\n\\u003EGenerated with [BBoe](/u/bboe)'s [Subreddit Stats](https://github.com/praw-dev/prawtools)  \\nSRS Marker: 1348258786.0\", \"likes\": null, \"suggested_sort\": null, \"user_reports\": [], \"secure_media\": null, \"link_flair_text\": null, \"id\": \"10agf2\", \"from_kind\": null, \"gilded\": 0, \"archived\": true, \"clicked\": false, \"report_reasons\": null, \"author\": \"subreddit_stats\", \"media\": null, \"name\": \"t3_10agf2\", \"score\": 1, \"approved_by\": null, \"over_18\": false, \"hidden\": false, \"thumbnail\": \"\", \"subreddit_id\": \"t5_2slc3\", \"edited\": false, \"link_flair_css_class\": null, \"author_flair_css_class\": null, \"downs\": 0, \"mod_reports\": [], \"secure_media_embed\": {}, \"saved\": true, \"removal_reason\": null, \"stickied\": false, \"from\": null, \"is_self\": true, \"from_id\": null, \"permalink\": \"/r/bboe/comments/10agf2/subreddit_stats_posts_from_20111208_to_20120921/\", \"locked\": false, \"hide_score\": false, \"created\": 1348328571.0, \"url\": \"https://www.reddit.com/r/bboe/comments/10agf2/subreddit_stats_posts_from_20111208_to_20120921/\", \"author_flair_text\": null, \"quarantine\": false, \"title\": \"Subreddit Stats: posts from 2011-12-08 to 2012-09-21 13:19 PDT\", \"created_utc\": 1348299771.0, \"ups\": 1, \"upvote_ratio\": 1.0, \"num_comments\": 0, \"visited\": false, \"num_reports\": null, \"distinguished\": null}}], \"after\": null, \"before\": null}}, {\"kind\": \"Listing\", \"data\": {\"modhash\": null, \"children\": [], \"after\": null, \"before\": null}}]"
+        },
+        "headers": {
+          "CF-RAY": "2b5a76dfb6ef13d1-LAX",
+          "Connection": "keep-alive",
+          "Content-Type": "application/json; charset=UTF-8",
+          "Date": "Sun, 19 Jun 2016 22:37:13 GMT",
+          "Server": "cloudflare-nginx",
+          "Strict-Transport-Security": "max-age=15552000; includeSubDomains; preload",
+          "Transfer-Encoding": "chunked",
+          "Vary": "accept-encoding",
+          "X-Moose": "majestic",
+          "cache-control": "private, s-maxage=0, max-age=0, must-revalidate",
+          "expires": "-1",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "SAMEORIGIN",
+          "x-ratelimit-remaining": "599.0",
+          "x-ratelimit-reset": "167",
+          "x-ratelimit-used": "1",
+          "x-reddit-tracking": "https://pixel.redditmedia.com/pixel/of_destiny.png?v=CG8urbqtWAac%2FbHAU3H%2BqvM02S1qFfQ48S0yC7eh9Udc1wx0Cs33Evq9ssg3%2BizroVv7Md%2Fp0deyNnx%2FWwlJ5USYBhsAXs2w",
+          "x-ua-compatible": "IE=edge",
+          "x-xss-protection": "1; mode=block"
+        },
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "url": "https://oauth.reddit.com/comments/10agf2/?sort=best&limit=2048&raw_json=1"
+      }
+    }
+  ],
+  "recorded_with": "betamax/0.5.1"
+}

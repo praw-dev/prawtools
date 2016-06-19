@@ -90,9 +90,9 @@ class SubRedditStats(object):
             else:
                 sys.stdout.write('\n')
 
-    def prev_stat(self, prev_url):
-        """Load the previous subreddit stats page."""
-        self.prev_srs = self.reddit.submission(prev_url)
+    def prev_stat(self, prev_id):
+        """Load the previous subreddit stat."""
+        self.prev_srs = self.reddit.submission(prev_id)
         self.min_date = self._previous_max(self.prev_srs)
 
     def fetch_recent_submissions(self, max_duration, after, exclude_self,
@@ -471,7 +471,7 @@ def main():
                       help=('Only include self posts (and their comments) in '
                             'the calculation.'))
     parser.add_option('', '--prev',
-                      help='Statically provide the URL of previous SRS page.')
+                      help='Provide the submission id of previous SRS page.')
     parser.add_option('', '--include-prev', action='store_true',
                       help='Don\'t try to avoid overlap with a previous SRS.')
     parser.add_option('-o', '--output',

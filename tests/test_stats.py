@@ -11,8 +11,16 @@ class StatsTest(IntegrationTest):
         self.srs = SubRedditStats('redditdev', None, None, None)
         super(StatsTest, self).setUp(self.srs.reddit._core._requestor._http)
 
+    def test_prev_stat(self):
+        self.assertEqual(0, self.srs.min_date)
+        self.assertEqual(None, self.srs.prev_srs)
+        with self.recorder.use_cassette('StatsTest.prev_stat'):
+            self.srs.prev_stat('10agf2')
+        self.assertGreater(self.srs.min_date, 0)
+        self.assertEqual('10agf2', self.srs.prev_srs.id)
+
     def test_recent(self):
-        with self.recorder.use_cassette('StatsTest.test_recent'):
+        with self.recorder.use_cassette('StatsTest.recent'):
             self.assertTrue(
                 self.srs.fetch_recent_submissions(
                     max_duration=7, after=None, exclude_self=False,
@@ -30,7 +38,7 @@ class StatsTest(IntegrationTest):
 
     @mock.patch('time.sleep', return_value=None)
     def test_top(self, _sleep_mock):
-        with self.recorder.use_cassette('StatsTest.test_top'):
+        with self.recorder.use_cassette('StatsTest.top'):
             self.assertTrue(
                 self.srs.fetch_top_submissions('week', None, None))
             self.assertTrue(len(self.srs.submissions) > 1)
