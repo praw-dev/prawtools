@@ -15,5 +15,5 @@ python:
 script:
   - flake8
   - pydocstyle
-  - coverage run --source=prawcore setup.py test
+  - coverage run --source=prawtools setup.py test
 sudo: false
