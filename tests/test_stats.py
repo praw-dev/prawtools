@@ -31,6 +31,15 @@ class StatsTest(IntegrationTest):
                 self.assertTrue(prev < submission.created_utc)
                 prev = submission.created_utc
 
+    def test_recent_with_prev_stat(self):
+        self.srs.subreddit = self.srs.reddit.subreddit('reddit_api_test')
+        with self.recorder.use_cassette('StatsTest.recent_with_prev_stat'):
+            self.assertFalse(
+                self.srs.fetch_recent_submissions(
+                    max_duration=7, after=None, exclude_self=False,
+                    exclude_link=False))
+        self.assertEqual(0, len(self.srs.submissions))
+
     def test_recent_type_eror(self):
         self.assertRaises(TypeError, self.srs.fetch_recent_submissions,
                           exclude_self=True, exclude_link=True, after=None,

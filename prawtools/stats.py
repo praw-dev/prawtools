@@ -9,7 +9,7 @@ from collections import defaultdict
 from datetime import datetime
 from praw import Reddit
 from praw.models import Redditor, Submission
-from six import iteritems, itervalues, text_type as tt
+from six import iteritems, text_type as tt
 from update_checker import update_check
 from . import __version__
 from .helpers import arg_parser
@@ -40,13 +40,10 @@ class SubRedditStats(object):
     @staticmethod
     def _permalink(item):
         if isinstance(item, Submission):
-            return tt('/comments/{}/_/').format(item.id)
+            return tt('/comments/{}').format(item.id)
         else:  # comment
-            import pprint
-            pprint.pprint(vars(item))
-            raise 'Foo'
-            # return tt('/comments/{}/_/{}?context=1').format(tokens[6],
-            #                                                  tokens[8])
+            return tt('/comments/{}//{}?context=1').format(item.submission.id,
+                                                           item.id)
 
     @staticmethod
     def _pts(points):
@@ -113,8 +110,6 @@ class SubRedditStats(object):
         params = {'after': after} if after else None
         self.msg('DEBUG: Fetching submissions', 1)
         for submission in self.subreddit.new(limit=None, params=params):
-            if submission.created_utc > self.max_date:
-                continue
             if submission.created_utc <= self.min_date:
                 break
             if since_last and submission.title.startswith(self.post_prefix) \
@@ -127,6 +122,8 @@ class SubRedditStats(object):
                     self.min_date = max(self.min_date,
                                         self._previous_max(submission))
                     self.prev_srs = submission
+                continue
+            if submission.created_utc > self.max_date:
                 continue
             if exclude_self and submission.is_self:
                 continue
@@ -202,8 +199,6 @@ class SubRedditStats(object):
             comments = [x for x in submission.comments.list() if
                         self.distinguished or x.distinguished is None]
             self.comments.extend(comments)
-            for orphans in itervalues(submission._orphaned):
-                self.comments.extend(orphans)
         for comment in self.comments:
             if comment.author:
                 self.commenters[str(comment.author)].append(comment)
