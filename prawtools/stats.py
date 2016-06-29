@@ -15,7 +15,7 @@ from . import __version__
 from .helpers import arg_parser
 
 DAYS_IN_SECONDS = 60 * 60 * 24
-MAX_BODY_SIZE = 10000
+MAX_BODY_SIZE = 40000
 
 
 def safe_title(submission):
