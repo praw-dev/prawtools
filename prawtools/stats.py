@@ -1,5 +1,4 @@
 """Utility to provide submission and comment statistics in a subreddit."""
-
 from __future__ import print_function
 import codecs
 import re
@@ -10,9 +9,7 @@ from datetime import datetime
 from praw import Reddit
 from praw.models import Redditor, Submission
 from six import iteritems, text_type as tt
-from update_checker import update_check
-from . import __version__
-from .helpers import arg_parser
+from .helpers import AGENT, arg_parser, check_for_updates
 
 DAYS_IN_SECONDS = 60 * 60 * 24
 MAX_BODY_SIZE = 40000
@@ -59,8 +56,7 @@ class SubRedditStats(object):
 
     def __init__(self, subreddit, site, verbosity, distinguished):
         """Initialize the SubRedditStats instance with config options."""
-        self.reddit = Reddit(site, disable_update_check=True,
-                             user_agent='prawtools/{}'.format(__version__))
+        self.reddit = Reddit(site, disable_update_check=True, user_agent=AGENT)
         self.subreddit = self.reddit.subreddit(subreddit)
         self.verbosity = verbosity
         self.distinguished = distinguished
@@ -476,8 +472,7 @@ def main():
     else:
         subject_reddit = args[0]
 
-    if not options.disable_update_check:  # Check for updates
-        update_check('prawtools', __version__)
+    check_for_updates(options)
 
     print('You chose to analyze this subreddit: {}'.format(subject_reddit))
 

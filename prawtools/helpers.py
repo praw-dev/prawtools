@@ -1,7 +1,12 @@
 """prawtools.helpers provides functions useful in other prawtools modules."""
-
 from optparse import OptionGroup, OptionParser
+
+from update_checker import update_check
+
 from . import __version__
+
+
+AGENT = 'prawtools/{}'.format(__version__)
 
 
 def arg_parser(*args, **kwargs):
@@ -22,3 +27,9 @@ def arg_parser(*args, **kwargs):
     parser.add_option_group(group)
 
     return parser
+
+
+def check_for_updates(options):
+    """Check for package updates."""
+    if not options.disable_update_check:  # Check for updates
+        update_check('prawtools', __version__)

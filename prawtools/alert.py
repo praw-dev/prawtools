@@ -3,15 +3,14 @@
 This command will alert you when chosen keywords appear in reddit comments.
 
 """
-
-from __future__ import print_function, unicode_literals
+from __future__ import print_function
 
 import re
-import praw
 import sys
-from update_checker import update_check
-from . import __version__
-from .helpers import arg_parser
+
+import praw
+
+from .helpers import AGENT, arg_parser, check_for_updates
 
 
 def quick_url(comment):
@@ -42,15 +41,13 @@ def main():
         parser.error('At least one KEYWORD must be provided.')
 
     # Create the reddit session, and login if necessary
-    session = praw.Reddit('reddit_alert (prawtools {0})'.format(__version__),
-                          site_name=options.site, disable_update_check=True)
+    session = praw.Reddit(options.site, disable_update_check=True,
+                          user_agent=AGENT)
     if options.message:
         session.login(options.user, options.pswd)
         msg_to = session.get_redditor(options.message)
 
-    # Check for updates
-    if not options.disable_update_check:
-        update_check('prawtools', __version__)
+    check_for_updates(options)
 
     # Build regex
     args = [x.lower() for x in args]

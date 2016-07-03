@@ -3,9 +3,7 @@
 This command allows you to view and change some subreddit options.
 
 """
-
-
-from __future__ import print_function, unicode_literals
+from __future__ import print_function
 
 import json
 import re
@@ -13,9 +11,7 @@ import sys
 from collections import Counter
 from optparse import OptionGroup
 from praw import Reddit
-from update_checker import update_check
-from . import __version__
-from .helpers import arg_parser
+from .helpers import AGENT, arg_parser, check_for_updates
 
 
 if sys.version[0] < 3:
@@ -28,7 +24,7 @@ class ModUtils(object):
     def __init__(self, subreddit, site=None, user=None, pswd=None,
                  verbose=None):
         """Initialize the ModUtils class by passing in config options."""
-        self.reddit = Reddit(str(self), site, disable_update_check=True)
+        self.reddit = Reddit(site, disable_update_check=True, user_agent=AGENT)
         self.reddit.config.decode_html_entities = True
         self._logged_in = False
         self._user = user
@@ -298,8 +294,7 @@ def main():
         parser.error('Must provide --subject when providing --message.')
     subreddit = args[0]
 
-    if not options.disable_update_check:  # Check for updates
-        update_check('prawtools', __version__)
+    check_for_updates(options)
 
     modutils = ModUtils(subreddit, options.site, options.user, options.pswd,
                         options.verbose)
