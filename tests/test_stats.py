@@ -21,6 +21,7 @@ class StatsTest(IntegrationTest):
 
     def test_recent(self):
         with self.recorder.use_cassette('StatsTest.recent'):
+            self.srs.max_date = 1466000000  # To work with current cassette
             self.assertTrue(
                 self.srs.fetch_recent_submissions(
                     max_duration=7, after=None, exclude_self=False,
