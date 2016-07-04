@@ -17,7 +17,7 @@ def quick_url(comment):
     """Return the URL for the comment without fetching its submission."""
     def to_id(fullname):
         return fullname.split('_', 1)[1]
-    return ('http://www.reddit.com/r/{0}/comments/{1}/_/{2}?context=3'
+    return ('http://www.reddit.com/r/{}/comments/{}/_/{}?context=3'
             .format(comment.subreddit.display_name, to_id(comment.link_id),
                     comment.id))
 
@@ -35,17 +35,16 @@ def main():
                             'supplied multiple times.'))
     parser.add_option('-m', '--message', metavar='USER',
                       help=('When set, send a reddit message to USER with the '
-                            'alert. Requires the alert script to login.'))
+                            'alert.'))
     options, args = parser.parse_args()
     if not args:
         parser.error('At least one KEYWORD must be provided.')
 
-    # Create the reddit session, and login if necessary
     session = praw.Reddit(options.site, disable_update_check=True,
                           user_agent=AGENT)
+
     if options.message:
-        session.login(options.user, options.pswd)
-        msg_to = session.get_redditor(options.message)
+        msg_to = session.redditor(options.message)
 
     check_for_updates(options)
 
@@ -53,8 +52,8 @@ def main():
     args = [x.lower() for x in args]
     reg_prefix = r'(?:^|[^a-z])'  # Any character (or start) can precede
     reg_suffix = r'(?:$|[^a-z])'  # Any character (or end) can follow
-    regex = re.compile(r'{0}({1}){2}'.format(reg_prefix, '|'.join(args),
-                                             reg_suffix), re.IGNORECASE)
+    regex = re.compile(r'{}({}){}'.format(reg_prefix, '|'.join(args),
+                                          reg_suffix), re.IGNORECASE)
 
     # Determine subreddit or multireddit
     if options.subreddit:
@@ -64,8 +63,8 @@ def main():
 
     print('Alerting on:')
     for item in sorted(args):
-        print(' * {0}'.format(item))
-    print('using the comment stream: http://www.reddit.com/r/{0}/comments'
+        print(' * {}'.format(item))
+    print('using the comment stream: https://www.reddit.com/r/{}/comments'
           .format(subreddit))
 
     # Build ignore set
@@ -75,19 +74,18 @@ def main():
         ignore_users = set()
 
     try:
-        for comment in praw.helpers.comment_stream(session, subreddit,
-                                                   verbosity=options.verbose):
+        for comment in session.subreddit(subreddit).stream.comments():
             if comment.author and comment.author.name.lower() in ignore_users:
                 continue
             match = regex.search(comment.body)
             if match:
                 keyword = match.group(1).lower()
                 url = quick_url(comment)
-                print('{0}: {1}'.format(keyword, url))
+                print('{}: {}'.format(keyword, url))
                 if options.message:
-                    msg_to.send_message(
-                        'Reddit Alert: {0}'.format(keyword),
-                        '{0}\n\nby /u/{1}\n\n---\n\n{2}'.format(
+                    msg_to.message(
+                        'Reddit Alert: {}'.format(keyword),
+                        '{}\n\nby /u/{}\n\n---\n\n{}'.format(
                             url, comment.author, comment.body))
     except KeyboardInterrupt:
         sys.stderr.write('\n')
