@@ -14,41 +14,34 @@ from praw import Reddit
 from .helpers import AGENT, arg_parser, check_for_updates
 
 
-if sys.version[0] < 3:
+if sys.version_info[0] < 3:
     input = raw_input  # NOQA
 
 
 class ModUtils(object):
     """Class that provides all the modutils functionality."""
 
-    def __init__(self, subreddit, site=None, user=None, pswd=None,
-                 verbose=None):
+    def __init__(self, subreddit, site=None, verbose=None):
         """Initialize the ModUtils class by passing in config options."""
         self.reddit = Reddit(site, disable_update_check=True, user_agent=AGENT)
-        self.reddit.config.decode_html_entities = True
-        self._logged_in = False
-        self._user = user
-        self._pswd = pswd
-        self.sub = self.reddit.get_subreddit(subreddit)
+        self.sub = self.reddit.subreddit(subreddit)
         self.verbose = verbose
         self._current_flair = None
 
     def add_users(self, category):
-        """Add users to 'banned', 'contributors', or 'moderators'."""
-        mapping = {'banned': 'ban',
-                   'contributors': 'make_contributor',
-                   'moderators': 'make_moderator'}
+        """Add users to 'banned', 'contributor', or 'moderator'."""
+        mapping = {'banned': 'ban', 'contributor': 'make_contributor',
+                   'moderator': 'make_moderator'}
 
         if category not in mapping:
-            print('%r is not a valid option for --add' % category)
+            print('{!r} is not a valid option for --add'.format(category))
             return
-        self.login()
         func = getattr(self.sub, mapping[category])
         print('Enter user names (any separation should suffice):')
         data = sys.stdin.read().strip()
         for name in re.split('[^A-Za-z0-9_]+', data):
             func(name)
-            print('Added %r to %s' % (name, category))
+            print('Added {!r} to {}'.format(name, category))
 
     def clear_empty(self):
         """Remove flair that is not visible or has been set to empty."""
@@ -61,9 +54,8 @@ class ModUtils(object):
         """Generate the flair, by user, for the subreddit."""
         if self._current_flair is None:
             self._current_flair = []
-            self.login()
             if self.verbose:
-                print('Fetching flair list for %s' % self.sub)
+                print('Fetching flair list for {}'.format(self.sub))
             for flair in self.sub.get_flair_list(limit=None):
                 self._current_flair.append(flair)
                 yield flair
@@ -89,7 +81,7 @@ class ModUtils(object):
             raise Exception('At least one of use_text or use_css must be True')
         sorts = ('alpha', 'size')
         if sort not in sorts:
-            raise Exception('Sort must be one of: %s' % ', '.join(sorts))
+            raise Exception('Sort must be one of: {}'.format(', '.join(sorts)))
 
         # Build current flair list along with static values
         counter = {}
@@ -98,12 +90,11 @@ class ModUtils(object):
                 if use_css and use_text:
                     parts = tuple(x.strip() for x in key.split(','))
                     if len(parts) != 2:
-                        raise Exception('--static argument %r must have two '
+                        raise Exception('--static argument {!r} must have two '
                                         'parts (comma separated) when using '
-                                        'both text and css.' % parts)
+                                        'both text and css.'.format(parts))
                     key = parts
                 counter[key] = limit
-        self.login()
         if self.verbose:
             sys.stdout.write('Retrieving current flair\n')
             sys.stdout.flush()
@@ -144,23 +135,15 @@ class ModUtils(object):
             else:
                 text, css = '', key
             if self.verbose:
-                print('Adding template: text: "%s" css: "%s"' % (text, css))
+                print('Adding template: text: {!r} css: {!r}'
+                      .format(text, css))
             self.sub.add_flair_template(text, css, editable)
-
-    def login(self):
-        """Login and provide debugging output if so wanted."""
-        if not self._logged_in:
-            if self.verbose:
-                print('Logging in')
-            self.reddit.login(self._user, self._pswd)
-            self._logged_in = True
 
     def message(self, category, subject, msg_file):
         """Send message to all users in `category`."""
-        self.login()
-        users = getattr(self.sub, 'get_%s' % category)()
+        users = getattr(self.sub, category)
         if not users:
-            print('There are no %s on %s.' % (category, str(self.sub)))
+            print('There are no {} users on {}.'.format(category, self.sub))
             return
 
         if msg_file:
@@ -173,15 +156,15 @@ class ModUtils(object):
             print('Enter message:')
             msg = sys.stdin.read()
 
-        print('You are about to send the following '
-              'message to the users %s:' % ', '.join([str(x) for x in users]))
-        print('---BEGIN MESSAGE---\n%s\n---END MESSAGE---' % msg)
+        print('You are about to send the following message to the users {}:'
+              .format(', '.join([str(x) for x in users])))
+        print('---BEGIN MESSAGE---\n{}\n---END MESSAGE---'.format(msg))
         if input('Are you sure? yes/[no]: ').lower() not in ['y', 'yes']:
             print('Message sending aborted.')
             return
         for user in users:
             user.send_message(subject, msg)
-            print('Sent to: %s' % str(user))
+            print('Sent to: {}'.format(user))
 
     def output_current_flair(self, as_json=False):
         """Display the current flair for all users in the subreddit."""
@@ -192,8 +175,8 @@ class ModUtils(object):
 
         for flair in flair_list:
             print(flair['user'])
-            print('  Text: %s\n   CSS: %s' % (flair['flair_text'],
-                                              flair['flair_css_class']))
+            print('  Text: {}\n   CSS: {}'.format(flair['flair_text'],
+                                                  flair['flair_css_class']))
 
     def output_flair_stats(self):
         """Display statistics (number of users) for each unique flair item."""
@@ -217,19 +200,18 @@ class ModUtils(object):
 
     def output_list(self, category):
         """Display the list of users in `category`."""
-        self.login()
-        print('%s users:' % category)
-        for user in getattr(self.sub, 'get_%s' % category)():
-            print('  %s' % user)
+        print('{} users:'.format(category))
+        for user in getattr(self.sub, category):
+            print('  {}'.format(user))
 
 
 def main():
     """Provide the entry point in the the modutils command."""
-    mod_choices = ('banned', 'contributors', 'moderators')
-    mod_choices_dsp = ', '.join(['`%s`' % x for x in mod_choices])
+    mod_choices = ('banned', 'contributor', 'moderator')
+    mod_choices_dsp = ', '.join(['`{}`'.format(x) for x in mod_choices])
     msg = {
-        'add': ('Add users to one of the following categories: %s' %
-                mod_choices_dsp),
+        'add': ('Add users to one of the following categories: {}'
+                .format(mod_choices_dsp)),
         'clear': 'Remove users who have no flair set.',
         'css': 'Ignore the CSS field when synchronizing flair.',
         'edit': 'When adding flair templates, mark them as editable.',
@@ -240,10 +222,11 @@ def main():
         'limit': ('The minimum number of users that must have the specified '
                   'flair in order to add as a template. default: %default'),
         'list': ('List the users in one of the following categories: '
-                 '%s. May be specified more than once.') % mod_choices_dsp,
+                 '{}. May be specified more than once.'
+                 .format(mod_choices_dsp)),
         'msg': ('Send message to users of one of the following categories: '
-                '%s. Message subject provided via --subject, content provided '
-                'via --file or STDIN.') % mod_choices_dsp,
+                '{}. Message subject provided via --subject, content provided '
+                'via --file or STDIN.').format(mod_choices_dsp),
         'sort': ('The order to add flair templates. Available options are '
                  '`alpha` to add alphabetically, and `size` to first add '
                  'flair that is shared by the most number of users. '
@@ -286,8 +269,6 @@ def main():
     parser.add_option_group(group)
 
     options, args = parser.parse_args()
-    if options.pswd and not options.user:
-        parser.error('Must provide --user when providing --pswd.')
     if len(args) == 0:
         parser.error('Must provide subreddit name.')
     if options.message and not options.subject:
@@ -296,8 +277,7 @@ def main():
 
     check_for_updates(options)
 
-    modutils = ModUtils(subreddit, options.site, options.user, options.pswd,
-                        options.verbose)
+    modutils = ModUtils(subreddit, options.site, options.verbose)
 
     if options.add:
         modutils.add_users(options.add)
