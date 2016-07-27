@@ -17,8 +17,9 @@ def env_default(key):
 
     Set environment variable to placeholder if it doesn't exist.
     """
-    return os.environ.setdefault('praw_{}'.format(key),
-                                 'placeholder_{}'.format(key))
+    test_environ = 'prawtest_{}'.format(key)
+    test_value = os.environ.get(test_environ, 'placeholder_{}'.format(key))
+    return os.environ.setdefault('praw_{}'.format(key), test_value)
 
 
 os.environ['praw_check_for_updates'] = 'False'
