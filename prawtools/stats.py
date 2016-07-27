@@ -151,8 +151,7 @@ class SubRedditStats(object):
         if top not in ('day', 'week', 'month', 'year', 'all'):
             raise TypeError('{!r} is not a valid top value'.format(top))
         self.msg('DEBUG: Fetching submissions', 1)
-        params = {'t': top}
-        for submission in self.subreddit.top(limit=None, params=params):
+        for submission in self.subreddit.top(limit=None, time_filter=top):
             if exclude_self and submission.is_self:
                 continue
             if exclude_link and not submission.is_self:
