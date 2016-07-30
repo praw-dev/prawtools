@@ -119,25 +119,20 @@ username: XXX
 
 ### subreddit_stats examples
 
-0. Generate stats for subreddit __foo__ for the last 30 days with extra
-verbose output. Post results to subreddit __bar__.
+0. Generate stats for subreddit __foo__ for the last 30 days.
 
-        subreddit_stats -d30 -vv -R bar foo
+        subreddit_stats foo 30
 
-The -d30 flag will get all submissions from the last 30 days, but will ignore
-the last three days. As a result, you may experience messages like "No
-submissions found". To analyze one month, try:
+Passing a number, `N`, as the second argument will get all submissions from the
+last N days, but will ignore submissions from the most recent 24 hours. As a
+result, you may experience messages like "No submissions found". To analyze the
+top submissions made within the last month run:
 
-        subreddit_stats -tmonth -vv -R bar foo
+        subreddit_stats foo month
 
-Similarly, to analyze one year:
+Similarly, to analyze the top submissions to __foo__ over the last year, run:
 
-        subreddit_stats -tyear -vv -R bar foo
-
-0. Generate stats for subreddit __blah__ for the top posts of the year. Post
-the results to the same subreddit.
-
-        subreddit_stats --top year blah
+        subreddit_stats foo year
 
 0. To see other possible options
 
