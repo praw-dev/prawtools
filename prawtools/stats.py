@@ -344,9 +344,16 @@ def main():
                       help='Number of top submitters to display '
                       '[default %default]')
 
-    logging.basicConfig(level=logging.DEBUG)
-
     options, args = parser.parse_args()
+
+    if options.verbose == 1:
+        logger.setLevel(logging.INFO)
+    elif options.verbose > 1:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.NOTSET)
+    logger.addHandler(logging.StreamHandler())
+
     if len(args) != 2:
         parser.error('SUBREDDIT and VIEW must be provided')
     subreddit, view = args
