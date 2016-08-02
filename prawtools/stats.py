@@ -17,7 +17,7 @@ from six import iteritems, text_type as tt
 from .helpers import AGENT, arg_parser, check_for_updates
 
 DAYS_IN_SECONDS = 60 * 60 * 24
-RE_WHITESPACE = re.compile('\s+')
+RE_WHITESPACE = re.compile(r'\s+')
 TOP_VALUES = {'all', 'day', 'month', 'week', 'year'}
 
 logger = logging.getLogger(__package__)
@@ -51,7 +51,7 @@ class SubredditStats(object):
     @staticmethod
     def _safe_title(submission):
         """Return titles with whitespace replaced by spaces and stripped."""
-        return RE_WHITESPACE.sub(submission.title, ' ').strip()
+        return RE_WHITESPACE.sub(' ', submission.title).strip()
 
     @staticmethod
     def _save_report(title, body):
