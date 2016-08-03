@@ -198,15 +198,17 @@ class SubredditStats(object):
             return retval
 
         basic = self.basic_stats()
-        t_commenters = self.top_commenters(commenters)
-        t_comments = self.top_comments()
-        t_submissions = self.top_submissions()
-        t_submitters = self.top_submitters(submitters)
+        top_commenters = self.top_commenters(commenters)
+        top_comments = self.top_comments()
+        top_submissions = self.top_submissions()
 
-        body = (basic + t_submitters + t_commenters + t_submissions +
-                t_comments + self.post_footer)
+        # Decrease number of top submitters if body is too large.
+        body = None
+        while body is None or len(body) > 40000 and submitters > 0:
+            body = (basic + self.top_submitters(submitters) + top_commenters
+                    + top_submissions + top_comments + self.post_footer)
+            submitters -= 1
 
-        # Set the initial title
         title = '{} {} {}posts from {} to {}'.format(
             self.post_prefix, str(self.subreddit),
             'top ' if view in TOP_VALUES else '', timef(self.min_date, True),
