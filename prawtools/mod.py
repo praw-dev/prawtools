@@ -23,7 +23,7 @@ class ModUtils(object):
 
     def __init__(self, subreddit, site=None, verbose=None):
         """Initialize the ModUtils class by passing in config options."""
-        self.reddit = Reddit(site, disable_update_check=True, user_agent=AGENT)
+        self.reddit = Reddit(site, check_for_updates=False, user_agent=AGENT)
         self.sub = self.reddit.subreddit(subreddit)
         self.verbose = verbose
         self._current_flair = None

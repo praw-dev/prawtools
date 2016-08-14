@@ -40,7 +40,7 @@ def main():
     if not args:
         parser.error('At least one KEYWORD must be provided.')
 
-    session = praw.Reddit(options.site, disable_update_check=True,
+    session = praw.Reddit(options.site, check_for_updates=False,
                           user_agent=AGENT)
 
     if options.message:
