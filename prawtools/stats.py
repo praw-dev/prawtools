@@ -72,7 +72,7 @@ class SubredditStats(object):
         self.distinguished = distinguished
         self.min_date = 0
         self.max_date = time.time() - DAYS_IN_SECONDS
-        self.reddit = Reddit(site, disable_update_check=True, user_agent=AGENT)
+        self.reddit = Reddit(site, check_for_updates=False, user_agent=AGENT)
         self.submissions = []
         self.submitters = defaultdict(list)
         self.submit_subreddit = self.reddit.subreddit('subreddit_stats')
