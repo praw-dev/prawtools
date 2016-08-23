@@ -122,9 +122,10 @@ class ModUtils(object):
         # Clear current templates and store flair according to the sort
         if self.verbose:
             print('Clearing current flair templates')
-        self.sub.clear_flair_templates()
+        self.sub.flair.templates.clear()
         for key, count in items:
             if not key or count < limit:
+                print('a')
                 continue
             if use_text and use_css:
                 text, css = key
@@ -135,7 +136,7 @@ class ModUtils(object):
             if self.verbose:
                 print('Adding template: text: {!r} css: {!r}'
                       .format(text, css))
-            self.sub.add_flair_template(text, css, editable)
+            self.sub.flair.templates.add(text, css, editable)
 
     def message(self, category, subject, msg_file):
         """Send message to all users in `category`."""
