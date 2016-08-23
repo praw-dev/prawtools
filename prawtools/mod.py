@@ -47,7 +47,7 @@ class ModUtils(object):
         """Remove flair that is not visible or has been set to empty."""
         for flair in self.current_flair():
             if not flair['flair_text'] and not flair['flair_css_class']:
-                print(self.reddit.delete_flair(self.sub, flair['user']))
+                print(self.reddit.flair.update(flair['user']))
                 print('Removed flair for {0}'.format(flair['user']))
 
     def current_flair(self):
@@ -56,7 +56,7 @@ class ModUtils(object):
             self._current_flair = []
             if self.verbose:
                 print('Fetching flair list for {}'.format(self.sub))
-            for flair in self.sub.get_flair_list(limit=None):
+            for flair in self.sub.flair:
                 self._current_flair.append(flair)
                 yield flair
         else:
@@ -168,7 +168,7 @@ class ModUtils(object):
 
     def output_current_flair(self, as_json=False):
         """Display the current flair for all users in the subreddit."""
-        flair_list = sorted(self.current_flair(), key=lambda x: x['user'])
+        flair_list = sorted(self.current_flair(), key=lambda x: x['user'].name)
         if as_json:
             print(json.dumps(flair_list, sort_keys=True, indent=4))
             return
