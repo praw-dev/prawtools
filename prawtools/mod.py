@@ -4,18 +4,16 @@ This command allows you to view and change some subreddit options.
 
 """
 from __future__ import print_function
-
 import json
 import re
 import sys
 from collections import Counter
 from optparse import OptionGroup
+
 from praw import Reddit
+from six.moves import input
+
 from .helpers import AGENT, arg_parser, check_for_updates
-
-
-if sys.version_info[0] < 3:
-    input = raw_input  # NOQA
 
 
 class ModUtils(object):
