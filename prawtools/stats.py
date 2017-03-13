@@ -16,7 +16,7 @@ from six import iteritems, text_type as tt
 
 from .helpers import AGENT, arg_parser, check_for_updates
 
-DAYS_IN_SECONDS = 60 * 60 * 24
+SECONDS_IN_A_DAY = 60 * 60 * 24
 RE_WHITESPACE = re.compile(r'\s+')
 TOP_VALUES = {'all', 'day', 'month', 'week', 'year'}
 
@@ -71,7 +71,7 @@ class SubredditStats(object):
         self.comments = []
         self.distinguished = distinguished
         self.min_date = 0
-        self.max_date = time.time() - DAYS_IN_SECONDS
+        self.max_date = time.time() - SECONDS_IN_A_DAY
         self.reddit = Reddit(site, check_for_updates=False, user_agent=AGENT)
         self.submissions = []
         self.submitters = defaultdict(list)
@@ -116,7 +116,7 @@ class SubredditStats(object):
 
         """
         if max_duration:
-            self.min_date = self.max_date - DAYS_IN_SECONDS * max_duration
+            self.min_date = self.max_date - SECONDS_IN_A_DAY * max_duration
         for submission in self.subreddit.new(limit=None):
             if submission.created_utc <= self.min_date:
                 break
