@@ -162,13 +162,7 @@ class SubredditStats(object):
             logger.debug('{}/{} submissions'
                          .format(index + 1, len(self.submissions)))
             submission.comment_sort = 'top'
-
-            more_comments = submission.comments.replace_more()
-            if more_comments:
-                skipped_comments = sum(x.count for x in more_comments)
-                logger.debug('Skipped {} MoreComments ({} comments)'
-                             .format(len(more_comments), skipped_comments))
-
+            submission.comments.replace_more(limit=0)
             comments = [comment for comment in submission.comments.list() if
                         self.distinguished or comment.distinguished is None]
             self.comments.extend(comments)
