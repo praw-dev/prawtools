@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 from tempfile import mkstemp
 import codecs
+import gc
 import logging
 import os
 import re
@@ -11,7 +12,6 @@ import time
 
 
 from praw import Reddit
-from praw.models import Submission
 from six import iteritems, text_type as tt
 
 from .helpers import AGENT, arg_parser, check_for_updates
@@ -21,6 +21,36 @@ RE_WHITESPACE = re.compile(r'\s+')
 TOP_VALUES = {'all', 'day', 'month', 'week', 'year'}
 
 logger = logging.getLogger(__package__)
+
+
+class MiniComment(object):
+    """Provides a memory optimized version of a Comment."""
+
+    __slots__ = ('author', 'created_utc', 'id', 'score', 'submission')
+
+    def __init__(self, comment, submission):
+        """Initialize an instance of MiniComment."""
+        for attribute in self.__slots__:
+            if attribute in {'author', 'submission'}:
+                continue
+            setattr(self, attribute, getattr(comment, attribute))
+        self.author = str(comment.author) if comment.author else None
+        self.submission = submission
+
+
+class MiniSubmission(object):
+    """Provides a memory optimized version of a Submission."""
+
+    __slots__ = ('author', 'created_utc', 'distinguished', 'id',
+                 'num_comments', 'permalink', 'score', 'title', 'url')
+
+    def __init__(self, submission):
+        """Initialize an instance of MiniSubmission."""
+        for attribute in self.__slots__:
+            if attribute == 'author':
+                continue
+            setattr(self, attribute, getattr(submission, attribute))
+        self.author = str(submission.author) if submission.author else None
 
 
 class SubredditStats(object):
@@ -34,7 +64,7 @@ class SubredditStats(object):
 
     @staticmethod
     def _permalink(item):
-        if isinstance(item, Submission):
+        if isinstance(item, MiniSubmission):
             return tt('/comments/{}').format(item.id)
         else:
             return tt('/comments/{}//{}?context=1').format(item.submission.id,
@@ -73,7 +103,7 @@ class SubredditStats(object):
         self.min_date = 0
         self.max_date = time.time() - SECONDS_IN_A_DAY
         self.reddit = Reddit(site, check_for_updates=False, user_agent=AGENT)
-        self.submissions = []
+        self.submissions = {}
         self.submitters = defaultdict(list)
         self.submit_subreddit = self.reddit.subreddit('subreddit_stats')
         self.subreddit = self.reddit.subreddit(subreddit)
@@ -91,7 +121,7 @@ class SubredditStats(object):
         submission_duration = self.max_date - self.min_date
         submission_rate = self._rate(len(self.submissions),
                                      submission_duration)
-        submission_score = sum(sub.score for sub in self.submissions)
+        submission_score = sum(sub.score for sub in self.submissions.values())
 
         values = [('Total', len(self.submissions), len(self.comments)),
                   ('Rate (per day)', '{:.2f}'.format(submission_rate),
@@ -122,7 +152,7 @@ class SubredditStats(object):
                 break
             if submission.created_utc > self.max_date:
                 continue
-            self.submissions.append(submission)
+            self.submissions[submission.id] = MiniSubmission(submission)
 
     def fetch_submissions(self, submissions_callback, *args):
         """Wrap the submissions_callback function."""
@@ -134,9 +164,8 @@ class SubredditStats(object):
         if not self.submissions:
             return
 
-        self.submissions.sort(key=lambda x: x.created_utc)
-        self.min_date = self.submissions[0].created_utc
-        self.max_date = self.submissions[-1].created_utc
+        self.min_date = min(x.created_utc for x in self.submissions.values())
+        self.max_date = max(x.created_utc for x in self.submissions.values())
 
         self.process_submitters()
         self.process_commenters()
@@ -149,23 +178,29 @@ class SubredditStats(object):
 
         """
         for submission in self.subreddit.top(limit=None, time_filter=top):
-            self.submissions.append(submission)
+            self.submissions[submission.id] = MiniSubmission(submission)
 
     def process_commenters(self):
         """Group comments by author."""
         logger.debug('Processing Commenters on {} submissions'
                      .format(len(self.submissions)))
 
-        for index, submission in enumerate(self.submissions):
+        for index, submission in enumerate(self.submissions.values()):
             if submission.num_comments == 0:
                 continue
             logger.debug('{}/{} submissions'
                          .format(index + 1, len(self.submissions)))
-            submission.comment_sort = 'top'
-            submission.comments.replace_more(limit=0)
-            comments = [comment for comment in submission.comments.list() if
-                        self.distinguished or comment.distinguished is None]
-            self.comments.extend(comments)
+            real_submission = self.reddit.submission(id=submission.id)
+            real_submission.comment_sort = 'top'
+            real_submission.comments.replace_more(limit=0)
+            self.comments.extend(MiniComment(comment, submission)
+                                 for comment in real_submission.comments.list()
+                                 if self.distinguished
+                                 or comment.distinguished is None)
+
+            # Clean up to reduce memory usage
+            submission = None
+            gc.collect()
 
         self.comments.sort(key=lambda x: x.created_utc)
         for comment in self.comments:
@@ -175,7 +210,7 @@ class SubredditStats(object):
     def process_submitters(self):
         """Group submissions by author."""
         logger.debug('Processing Submitters')
-        for submission in self.submissions:
+        for submission in self.submissions.values():
             if submission.author and (self.distinguished or
                                       submission.distinguished is None):
                 self.submitters[submission.author].append(submission)
@@ -289,7 +324,7 @@ class SubredditStats(object):
             return ''
 
         top_submissions = sorted(
-            [x for x in self.submissions if self.distinguished or
+            [x for x in self.submissions.values() if self.distinguished or
              x.distinguished is None],
             key=lambda x: (-x.score, -x.num_comments, x.title))[:num]
 
