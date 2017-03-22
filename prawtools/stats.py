@@ -238,9 +238,10 @@ class SubredditStats(object):
         if num <= 0:
             return ''
 
-        top_commenters = sorted(iteritems(self.commenters), reverse=True,
-                                key=lambda x: (sum(y.score for y in x[1]),
-                                               len(x[1])))[:num]
+        top_commenters = sorted(
+            iteritems(self.commenters),
+            key=lambda x: (-sum(y.score for y in x[1]),
+                           -len(x[1]), str(x[0])))[:num]
 
         retval = self.post_header.format('Top Commenters')
         for author, comments in top_commenters:
@@ -256,9 +257,10 @@ class SubredditStats(object):
         if num <= 0:
             return ''
 
-        top_submitters = sorted(iteritems(self.submitters), reverse=True,
-                                key=lambda x: (sum(y.score for y in x[1]),
-                                               len(x[1])))[:num]
+        top_submitters = sorted(
+            iteritems(self.submitters),
+            key=lambda x: (-sum(y.score for y in x[1]),
+                           -len(x[1]), str(x[0])))[:num]
 
         retval = self.post_header.format('Top Submitters\' Top Submissions')
         for (author, submissions) in top_submitters:
@@ -266,8 +268,8 @@ class SubredditStats(object):
                 self._points(sum(x.score for x in submissions)),
                 len(submissions),
                 's' if len(submissions) != 1 else '', self._user(author))
-            for sub in sorted(submissions, reverse=True,
-                              key=lambda x: x.score)[:10]:
+            for sub in sorted(
+                    submissions, key=lambda x: (-x.score, x.title))[:10]:
                 title = self._safe_title(sub)
                 if sub.permalink in sub.url:
                     retval += tt('  0. {}').format(title)
@@ -289,7 +291,7 @@ class SubredditStats(object):
         top_submissions = sorted(
             [x for x in self.submissions if self.distinguished or
              x.distinguished is None],
-            reverse=True, key=lambda x: x.score)[:num]
+            key=lambda x: (-x.score, -x.num_comments, x.title))[:num]
 
         if not top_submissions:
             return ''
@@ -314,8 +316,8 @@ class SubredditStats(object):
         if num <= 0:
             return ''
 
-        top_comments = sorted(self.comments, reverse=True,
-                              key=lambda x: x.score)[:num]
+        top_comments = sorted(
+            self.comments, key=lambda x: (-x.score, str(x.author)))[:num]
         retval = self.post_header.format('Top Comments')
         for comment in top_comments:
             title = self._safe_title(comment.submission)
