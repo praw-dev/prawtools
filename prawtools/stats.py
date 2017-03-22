@@ -12,6 +12,7 @@ import time
 
 
 from praw import Reddit
+from prawcore.exceptions import RequestException
 from six import iteritems, text_type as tt
 
 from .helpers import AGENT, arg_parser, check_for_updates
@@ -192,7 +193,17 @@ class SubredditStats(object):
                          .format(index + 1, len(self.submissions)))
             real_submission = self.reddit.submission(id=submission.id)
             real_submission.comment_sort = 'top'
-            real_submission.comments.replace_more(limit=0)
+
+            for i in range(3):
+                try:
+                    real_submission.comments.replace_more(limit=0)
+                    break
+                except RequestException:
+                    if i >= 2:
+                        raise
+                    logger.debug('Failed to fetch submission {}, retrying'
+                                 .format(submission.id))
+
             self.comments.extend(MiniComment(comment, submission)
                                  for comment in real_submission.comments.list()
                                  if self.distinguished
