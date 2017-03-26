@@ -96,14 +96,15 @@ class SubredditStats(object):
     def _user(user):
         return '_deleted_' if user is None else tt('/u/{}').format(user)
 
-    def __init__(self, subreddit, site, distinguished):
+    def __init__(self, subreddit, site, distinguished, reddit=None):
         """Initialize the SubredditStats instance with config options."""
         self.commenters = defaultdict(list)
         self.comments = []
         self.distinguished = distinguished
         self.min_date = 0
         self.max_date = time.time() - SECONDS_IN_A_DAY
-        self.reddit = Reddit(site, check_for_updates=False, user_agent=AGENT)
+        self.reddit = (reddit or
+                       Reddit(site, check_for_updates=False, user_agent=AGENT))
         self.submissions = {}
         self.submitters = defaultdict(list)
         self.submit_subreddit = self.reddit.subreddit('subreddit_stats')
