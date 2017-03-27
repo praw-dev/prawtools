@@ -162,7 +162,7 @@ class SubredditStats(object):
 
         submissions_callback(*args)
 
-        logger.debug('Found {} submissions'.format(len(self.submissions)))
+        logger.info('Found {} submissions'.format(len(self.submissions)))
         if not self.submissions:
             return
 
@@ -190,8 +190,6 @@ class SubredditStats(object):
         for index, submission in enumerate(self.submissions.values()):
             if submission.num_comments == 0:
                 continue
-            logger.debug('{}/{} submissions'
-                         .format(index + 1, len(self.submissions)))
             real_submission = self.reddit.submission(id=submission.id)
             real_submission.comment_sort = 'top'
 
@@ -210,6 +208,10 @@ class SubredditStats(object):
                                  if self.distinguished
                                  or comment.distinguished is None)
 
+            if index % 50 == 49:
+                logger.debug('Completed: {:4d}/{} submissions'
+                             .format(index + 1, len(self.submissions)))
+
             # Clean up to reduce memory usage
             submission = None
             gc.collect()
@@ -221,7 +223,6 @@ class SubredditStats(object):
 
     def process_submitters(self):
         """Group submissions by author."""
-        logger.debug('Processing Submitters')
         for submission in self.submissions.values():
             if submission.author and (self.distinguished or
                                       submission.distinguished is None):
