@@ -184,9 +184,6 @@ class SubredditStats(object):
 
     def process_commenters(self):
         """Group comments by author."""
-        logger.debug('Processing Commenters on {} submissions'
-                     .format(len(self.submissions)))
-
         for index, submission in enumerate(self.submissions.values()):
             if submission.num_comments == 0:
                 continue
