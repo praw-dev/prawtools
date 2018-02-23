@@ -87,6 +87,7 @@ def main():
                         'Reddit Alert: {}'.format(keyword),
                         '{}\n\nby /u/{}\n\n---\n\n{}'.format(
                             url, comment.author, comment.body))
+            sys.stdout.flush()
     except KeyboardInterrupt:
         sys.stderr.write('\n')
         print('Goodbye!\n')
