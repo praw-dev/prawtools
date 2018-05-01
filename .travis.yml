@@ -3,15 +3,12 @@ cache: pip
 install: pip install coveralls flake8 pydocstyle
 language: python
 matrix:
-  allow_failures:
-    - python: nightly
   fast_finish: true
 python:
   - 2.7
-  - 3.3
   - 3.4
   - 3.5
-  - nightly
+  - 3.6
 script:
   - flake8
   - pydocstyle
