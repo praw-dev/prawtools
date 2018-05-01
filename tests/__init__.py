@@ -8,7 +8,7 @@ class IntegrationTest(unittest.TestCase):
     """Base class for prawtools integration tests."""
 
     def setUp(self, http):
-        """Setup runs before all test cases."""
+        """Run before all test cases."""
         self.recorder = Betamax(http)
 
         # Disable response compression in order to see the response bodies in
