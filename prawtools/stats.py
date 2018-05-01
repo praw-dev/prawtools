@@ -58,8 +58,7 @@ class SubredditStats(object):
     """Contain all the functionality of the subreddit_stats command."""
 
     post_footer = tt('>Generated with [BBoe](/u/bboe)\'s [Subreddit Stats]'
-                     '(https://github.com/praw-dev/prawtools) '
-                     '([Donate](https://cash.me/$praw))')
+                     '(https://github.com/praw-dev/prawtools)')
     post_header = tt('---\n###{}\n')
     post_prefix = tt('Subreddit Stats:')
 
