@@ -289,7 +289,7 @@ class SubredditStats(object):
 
         retval = self.post_header.format('Top Commenters')
         for author, comments in top_commenters:
-            retval += '0. {} ({}, {} comment{})\n'.format(
+            retval += '1. {} ({}, {} comment{})\n'.format(
                 self._user(author),
                 self._points(sum(x.score for x in comments)),
                 len(comments), 's' if len(comments) != 1 else '')
@@ -308,7 +308,7 @@ class SubredditStats(object):
 
         retval = self.post_header.format('Top Submitters\' Top Submissions')
         for (author, submissions) in top_submitters:
-            retval += '0. {}, {} submission{}: {}\n'.format(
+            retval += '1. {}, {} submission{}: {}\n'.format(
                 self._points(sum(x.score for x in submissions)),
                 len(submissions),
                 's' if len(submissions) != 1 else '', self._user(author))
@@ -316,9 +316,9 @@ class SubredditStats(object):
                     submissions, key=lambda x: (-x.score, x.title))[:10]:
                 title = self._safe_title(sub)
                 if sub.permalink in sub.url:
-                    retval += tt('  0. {}').format(title)
+                    retval += tt('  1. {}').format(title)
                 else:
-                    retval += tt('  0. [{}]({})').format(title, sub.url)
+                    retval += tt('  1. [{}]({})').format(title, sub.url)
                 retval += ' ({}, [{} comment{}]({}))\n'.format(
                     self._points(sub.score), sub.num_comments,
                     's' if sub.num_comments != 1 else '',
@@ -344,9 +344,9 @@ class SubredditStats(object):
         for sub in top_submissions:
             title = self._safe_title(sub)
             if sub.permalink in sub.url:
-                retval += tt('0. {}').format(title)
+                retval += tt('1. {}').format(title)
             else:
-                retval += tt('0. [{}]({})').format(title, sub.url)
+                retval += tt('1. [{}]({})').format(title, sub.url)
 
             retval += ' by {} ({}, [{} comment{}]({}))\n'.format(
                 self._user(sub.author), self._points(sub.score),
@@ -365,7 +365,7 @@ class SubredditStats(object):
         retval = self.post_header.format('Top Comments')
         for comment in top_comments:
             title = self._safe_title(comment.submission)
-            retval += tt('0. {}: {}\'s [comment]({}) in {}\n').format(
+            retval += tt('1. {}: {}\'s [comment]({}) in {}\n').format(
                 self._points(comment.score), self._user(comment.author),
                 self._permalink(comment), title)
         return tt('{}\n').format(retval)
