@@ -316,9 +316,9 @@ class SubredditStats(object):
                     submissions, key=lambda x: (-x.score, x.title))[:10]:
                 title = self._safe_title(sub)
                 if sub.permalink in sub.url:
-                    retval += tt('  1. {}').format(title)
+                    retval += tt('    1. {}').format(title)
                 else:
-                    retval += tt('  1. [{}]({})').format(title, sub.url)
+                    retval += tt('    1. [{}]({})').format(title, sub.url)
                 retval += ' ({}, [{} comment{}]({}))\n'.format(
                     self._points(sub.score), sub.num_comments,
                     's' if sub.num_comments != 1 else '',
