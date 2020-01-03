@@ -1,6 +1,6 @@
 after_success: coveralls
 cache: pip
-install: pip install coveralls flake8 pydocstyle
+install: pip install coveralls black flake8 pydocstyle
 language: python
 matrix:
   fast_finish: true
@@ -10,6 +10,7 @@ python:
   - 3.7
   - 3.8
 script:
+  - black --check --verbose *.py prawtools tests
   - flake8
   - pydocstyle
   - coverage run --source=prawtools setup.py test
