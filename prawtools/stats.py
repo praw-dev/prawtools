@@ -18,8 +18,8 @@ from six import iteritems, text_type as tt
 from .helpers import AGENT, arg_parser, check_for_updates
 
 SECONDS_IN_A_DAY = 60 * 60 * 24
-RE_WHITESPACE = re.compile(r'\s+')
-TOP_VALUES = {'all', 'day', 'month', 'week', 'year'}
+RE_WHITESPACE = re.compile(r"\s+")
+TOP_VALUES = {"all", "day", "month", "week", "year"}
 
 logger = logging.getLogger(__package__)
 
@@ -27,12 +27,12 @@ logger = logging.getLogger(__package__)
 class MiniComment(object):
     """Provides a memory optimized version of a Comment."""
 
-    __slots__ = ('author', 'created_utc', 'id', 'score', 'submission')
+    __slots__ = ("author", "created_utc", "id", "score", "submission")
 
     def __init__(self, comment, submission):
         """Initialize an instance of MiniComment."""
         for attribute in self.__slots__:
-            if attribute in {'author', 'submission'}:
+            if attribute in {"author", "submission"}:
                 continue
             setattr(self, attribute, getattr(comment, attribute))
         self.author = str(comment.author) if comment.author else None
@@ -42,13 +42,22 @@ class MiniComment(object):
 class MiniSubmission(object):
     """Provides a memory optimized version of a Submission."""
 
-    __slots__ = ('author', 'created_utc', 'distinguished', 'id',
-                 'num_comments', 'permalink', 'score', 'title', 'url')
+    __slots__ = (
+        "author",
+        "created_utc",
+        "distinguished",
+        "id",
+        "num_comments",
+        "permalink",
+        "score",
+        "title",
+        "url",
+    )
 
     def __init__(self, submission):
         """Initialize an instance of MiniSubmission."""
         for attribute in self.__slots__:
-            if attribute == 'author':
+            if attribute == "author":
                 continue
             setattr(self, attribute, getattr(submission, attribute))
         self.author = str(submission.author) if submission.author else None
@@ -57,43 +66,44 @@ class MiniSubmission(object):
 class SubredditStats(object):
     """Contain all the functionality of the subreddit_stats command."""
 
-    post_footer = tt('>Generated with [BBoe](/u/bboe)\'s [Subreddit Stats]'
-                     '(https://github.com/praw-dev/prawtools)')
-    post_header = tt('---\n###{}\n')
-    post_prefix = tt('Subreddit Stats:')
+    post_footer = tt(
+        ">Generated with [BBoe](/u/bboe)'s [Subreddit Stats]"
+        "(https://github.com/praw-dev/prawtools)"
+    )
+    post_header = tt("---\n###{}\n")
+    post_prefix = tt("Subreddit Stats:")
 
     @staticmethod
     def _permalink(item):
         if isinstance(item, MiniSubmission):
-            return tt('/comments/{}').format(item.id)
+            return tt("/comments/{}").format(item.id)
         else:
-            return tt('/comments/{}//{}?context=1').format(item.submission.id,
-                                                           item.id)
+            return tt("/comments/{}//{}?context=1").format(item.submission.id, item.id)
 
     @staticmethod
     def _points(points):
-        return '1 point' if points == 1 else '{} points'.format(points)
+        return "1 point" if points == 1 else "{} points".format(points)
 
     @staticmethod
     def _rate(items, duration):
-        return 86400. * items / duration if duration else items
+        return 86400.0 * items / duration if duration else items
 
     @staticmethod
     def _safe_title(submission):
         """Return titles with whitespace replaced by spaces and stripped."""
-        return RE_WHITESPACE.sub(' ', submission.title).strip()
+        return RE_WHITESPACE.sub(" ", submission.title).strip()
 
     @staticmethod
     def _save_report(title, body):
-        descriptor, filename = mkstemp('.md', dir='.')
+        descriptor, filename = mkstemp(".md", dir=".")
         os.close(descriptor)
-        with codecs.open(filename, 'w', 'utf-8') as fp:
-            fp.write('{}\n\n{}'.format(title, body))
-        logger.info('Report saved to {}'.format(filename))
+        with codecs.open(filename, "w", "utf-8") as fp:
+            fp.write("{}\n\n{}".format(title, body))
+        logger.info("Report saved to {}".format(filename))
 
     @staticmethod
     def _user(user):
-        return '_deleted_' if user is None else tt('/u/{}').format(user)
+        return "_deleted_" if user is None else tt("/u/{}").format(user)
 
     def __init__(self, subreddit, site, distinguished, reddit=None):
         """Initialize the SubredditStats instance with config options."""
@@ -102,40 +112,43 @@ class SubredditStats(object):
         self.distinguished = distinguished
         self.min_date = 0
         self.max_date = time.time() - SECONDS_IN_A_DAY
-        self.reddit = (reddit or
-                       Reddit(site, check_for_updates=False, user_agent=AGENT))
+        self.reddit = reddit or Reddit(site, check_for_updates=False, user_agent=AGENT)
         self.submissions = {}
         self.submitters = defaultdict(list)
-        self.submit_subreddit = self.reddit.subreddit('subreddit_stats')
+        self.submit_subreddit = self.reddit.subreddit("subreddit_stats")
         self.subreddit = self.reddit.subreddit(subreddit)
 
     def basic_stats(self):
         """Return a markdown representation of simple statistics."""
         comment_score = sum(comment.score for comment in self.comments)
         if self.comments:
-            comment_duration = (self.comments[-1].created_utc -
-                                self.comments[0].created_utc)
+            comment_duration = (
+                self.comments[-1].created_utc - self.comments[0].created_utc
+            )
             comment_rate = self._rate(len(self.comments), comment_duration)
         else:
             comment_rate = 0
 
         submission_duration = self.max_date - self.min_date
-        submission_rate = self._rate(len(self.submissions),
-                                     submission_duration)
+        submission_rate = self._rate(len(self.submissions), submission_duration)
         submission_score = sum(sub.score for sub in self.submissions.values())
 
-        values = [('Total', len(self.submissions), len(self.comments)),
-                  ('Rate (per day)', '{:.2f}'.format(submission_rate),
-                   '{:.2f}'.format(comment_rate)),
-                  ('Unique Redditors', len(self.submitters),
-                   len(self.commenters)),
-                  ('Combined Score', submission_score, comment_score)]
+        values = [
+            ("Total", len(self.submissions), len(self.comments)),
+            (
+                "Rate (per day)",
+                "{:.2f}".format(submission_rate),
+                "{:.2f}".format(comment_rate),
+            ),
+            ("Unique Redditors", len(self.submitters), len(self.commenters)),
+            ("Combined Score", submission_score, comment_score),
+        ]
 
-        retval = 'Period: {:.2f} days\n\n'.format(submission_duration / 86400.)
-        retval += '||Submissions|Comments|\n:-:|--:|--:\n'
+        retval = "Period: {:.2f} days\n\n".format(submission_duration / 86400.0)
+        retval += "||Submissions|Comments|\n:-:|--:|--:\n"
         for quad in values:
-            retval += '__{}__|{}|{}\n'.format(*quad)
-        return retval + '\n'
+            retval += "__{}__|{}|{}\n".format(*quad)
+        return retval + "\n"
 
     def fetch_recent_submissions(self, max_duration):
         """Fetch recent submissions in subreddit with boundaries.
@@ -157,11 +170,11 @@ class SubredditStats(object):
 
     def fetch_submissions(self, submissions_callback, *args):
         """Wrap the submissions_callback function."""
-        logger.debug('Fetching submissions')
+        logger.debug("Fetching submissions")
 
         submissions_callback(*args)
 
-        logger.info('Found {} submissions'.format(len(self.submissions)))
+        logger.info("Found {} submissions".format(len(self.submissions)))
         if not self.submissions:
             return
 
@@ -187,7 +200,7 @@ class SubredditStats(object):
             if submission.num_comments == 0:
                 continue
             real_submission = self.reddit.submission(id=submission.id)
-            real_submission.comment_sort = 'top'
+            real_submission.comment_sort = "top"
 
             for i in range(3):
                 try:
@@ -196,17 +209,22 @@ class SubredditStats(object):
                 except RequestException:
                     if i >= 2:
                         raise
-                    logger.debug('Failed to fetch submission {}, retrying'
-                                 .format(submission.id))
+                    logger.debug(
+                        "Failed to fetch submission {}, retrying".format(submission.id)
+                    )
 
-            self.comments.extend(MiniComment(comment, submission)
-                                 for comment in real_submission.comments.list()
-                                 if self.distinguished
-                                 or comment.distinguished is None)
+            self.comments.extend(
+                MiniComment(comment, submission)
+                for comment in real_submission.comments.list()
+                if self.distinguished or comment.distinguished is None
+            )
 
             if index % 50 == 49:
-                logger.debug('Completed: {:4d}/{} submissions'
-                             .format(index + 1, len(self.submissions)))
+                logger.debug(
+                    "Completed: {:4d}/{} submissions".format(
+                        index + 1, len(self.submissions)
+                    )
+                )
 
             # Clean up to reduce memory usage
             submission = None
@@ -220,19 +238,21 @@ class SubredditStats(object):
     def process_submitters(self):
         """Group submissions by author."""
         for submission in self.submissions.values():
-            if submission.author and (self.distinguished or
-                                      submission.distinguished is None):
+            if submission.author and (
+                self.distinguished or submission.distinguished is None
+            ):
                 self.submitters[submission.author].append(submission)
 
     def publish_results(self, view, submitters, commenters):
         """Submit the results to the subreddit. Has no return value (None)."""
+
         def timef(timestamp, date_only=False):
             """Return a suitable string representaation of the timestamp."""
             dtime = datetime.fromtimestamp(timestamp)
             if date_only:
-                retval = dtime.strftime('%Y-%m-%d')
+                retval = dtime.strftime("%Y-%m-%d")
             else:
-                retval = dtime.strftime('%Y-%m-%d %H:%M PDT')
+                retval = dtime.strftime("%Y-%m-%d %H:%M PDT")
             return retval
 
         basic = self.basic_stats()
@@ -243,25 +263,33 @@ class SubredditStats(object):
         # Decrease number of top submitters if body is too large.
         body = None
         while body is None or len(body) > 40000 and submitters > 0:
-            body = (basic + self.top_submitters(submitters) + top_commenters
-                    + top_submissions + top_comments + self.post_footer)
+            body = (
+                basic
+                + self.top_submitters(submitters)
+                + top_commenters
+                + top_submissions
+                + top_comments
+                + self.post_footer
+            )
             submitters -= 1
 
-        title = '{} {} {}posts from {} to {}'.format(
-            self.post_prefix, str(self.subreddit),
-            'top ' if view in TOP_VALUES else '', timef(self.min_date, True),
-            timef(self.max_date))
+        title = "{} {} {}posts from {} to {}".format(
+            self.post_prefix,
+            str(self.subreddit),
+            "top " if view in TOP_VALUES else "",
+            timef(self.min_date, True),
+            timef(self.max_date),
+        )
 
         try:  # Attempt to make the submission
             return self.submit_subreddit.submit(title, selftext=body)
         except Exception:
-            logger.exception('Failed to submit to {}'
-                             .format(self.submit_subreddit))
+            logger.exception("Failed to submit to {}".format(self.submit_subreddit))
             self._save_report(title, body)
 
     def run(self, view, submitters, commenters):
         """Run stats and return the created Submission."""
-        logger.info('Analyzing subreddit: {}'.format(self.subreddit))
+        logger.info("Analyzing subreddit: {}".format(self.subreddit))
 
         if view in TOP_VALUES:
             callback = self.fetch_top_submissions
@@ -271,7 +299,7 @@ class SubredditStats(object):
         self.fetch_submissions(callback, view)
 
         if not self.submissions:
-            logger.warning('No submissions were found.')
+            logger.warning("No submissions were found.")
             return
 
         return self.publish_results(view, submitters, commenters)
@@ -280,111 +308,141 @@ class SubredditStats(object):
         """Return a markdown representation of the top commenters."""
         num = min(num, len(self.commenters))
         if num <= 0:
-            return ''
+            return ""
 
         top_commenters = sorted(
             iteritems(self.commenters),
-            key=lambda x: (-sum(y.score for y in x[1]),
-                           -len(x[1]), str(x[0])))[:num]
+            key=lambda x: (-sum(y.score for y in x[1]), -len(x[1]), str(x[0])),
+        )[:num]
 
-        retval = self.post_header.format('Top Commenters')
+        retval = self.post_header.format("Top Commenters")
         for author, comments in top_commenters:
-            retval += '1. {} ({}, {} comment{})\n'.format(
+            retval += "1. {} ({}, {} comment{})\n".format(
                 self._user(author),
                 self._points(sum(x.score for x in comments)),
-                len(comments), 's' if len(comments) != 1 else '')
-        return '{}\n'.format(retval)
+                len(comments),
+                "s" if len(comments) != 1 else "",
+            )
+        return "{}\n".format(retval)
 
     def top_submitters(self, num):
         """Return a markdown representation of the top submitters."""
         num = min(num, len(self.submitters))
         if num <= 0:
-            return ''
+            return ""
 
         top_submitters = sorted(
             iteritems(self.submitters),
-            key=lambda x: (-sum(y.score for y in x[1]),
-                           -len(x[1]), str(x[0])))[:num]
+            key=lambda x: (-sum(y.score for y in x[1]), -len(x[1]), str(x[0])),
+        )[:num]
 
-        retval = self.post_header.format('Top Submitters\' Top Submissions')
+        retval = self.post_header.format("Top Submitters' Top Submissions")
         for (author, submissions) in top_submitters:
-            retval += '1. {}, {} submission{}: {}\n'.format(
+            retval += "1. {}, {} submission{}: {}\n".format(
                 self._points(sum(x.score for x in submissions)),
                 len(submissions),
-                's' if len(submissions) != 1 else '', self._user(author))
-            for sub in sorted(
-                    submissions, key=lambda x: (-x.score, x.title))[:10]:
+                "s" if len(submissions) != 1 else "",
+                self._user(author),
+            )
+            for sub in sorted(submissions, key=lambda x: (-x.score, x.title))[:10]:
                 title = self._safe_title(sub)
                 if sub.permalink in sub.url:
-                    retval += tt('  1. {}').format(title)
+                    retval += tt("    1. {}").format(title)
                 else:
-                    retval += tt('  1. [{}]({})').format(title, sub.url)
-                retval += ' ({}, [{} comment{}]({}))\n'.format(
-                    self._points(sub.score), sub.num_comments,
-                    's' if sub.num_comments != 1 else '',
-                    self._permalink(sub))
-            retval += '\n'
+                    retval += tt("    1. [{}]({})").format(title, sub.url)
+                retval += " ({}, [{} comment{}]({}))\n".format(
+                    self._points(sub.score),
+                    sub.num_comments,
+                    "s" if sub.num_comments != 1 else "",
+                    self._permalink(sub),
+                )
+            retval += "\n"
         return retval
 
     def top_submissions(self):
         """Return a markdown representation of the top submissions."""
         num = min(10, len(self.submissions))
         if num <= 0:
-            return ''
+            return ""
 
         top_submissions = sorted(
-            [x for x in self.submissions.values() if self.distinguished or
-             x.distinguished is None],
-            key=lambda x: (-x.score, -x.num_comments, x.title))[:num]
+            [
+                x
+                for x in self.submissions.values()
+                if self.distinguished or x.distinguished is None
+            ],
+            key=lambda x: (-x.score, -x.num_comments, x.title),
+        )[:num]
 
         if not top_submissions:
-            return ''
+            return ""
 
-        retval = self.post_header.format('Top Submissions')
+        retval = self.post_header.format("Top Submissions")
         for sub in top_submissions:
             title = self._safe_title(sub)
             if sub.permalink in sub.url:
-                retval += tt('1. {}').format(title)
+                retval += tt("1. {}").format(title)
             else:
-                retval += tt('1. [{}]({})').format(title, sub.url)
+                retval += tt("1. [{}]({})").format(title, sub.url)
 
-            retval += ' by {} ({}, [{} comment{}]({}))\n'.format(
-                self._user(sub.author), self._points(sub.score),
-                sub.num_comments, 's' if sub.num_comments != 1 else '',
-                self._permalink(sub))
-        return tt('{}\n').format(retval)
+            retval += " by {} ({}, [{} comment{}]({}))\n".format(
+                self._user(sub.author),
+                self._points(sub.score),
+                sub.num_comments,
+                "s" if sub.num_comments != 1 else "",
+                self._permalink(sub),
+            )
+        return tt("{}\n").format(retval)
 
     def top_comments(self):
         """Return a markdown representation of the top comments."""
         num = min(10, len(self.comments))
         if num <= 0:
-            return ''
+            return ""
 
-        top_comments = sorted(
-            self.comments, key=lambda x: (-x.score, str(x.author)))[:num]
-        retval = self.post_header.format('Top Comments')
+        top_comments = sorted(self.comments, key=lambda x: (-x.score, str(x.author)))[
+            :num
+        ]
+        retval = self.post_header.format("Top Comments")
         for comment in top_comments:
             title = self._safe_title(comment.submission)
-            retval += tt('1. {}: {}\'s [comment]({}) in {}\n').format(
-                self._points(comment.score), self._user(comment.author),
-                self._permalink(comment), title)
-        return tt('{}\n').format(retval)
+            retval += tt("1. {}: {}'s [comment]({}) in {}\n").format(
+                self._points(comment.score),
+                self._user(comment.author),
+                self._permalink(comment),
+                title,
+            )
+        return tt("{}\n").format(retval)
 
 
 def main():
     """Provide the entry point to the subreddit_stats command."""
-    parser = arg_parser(usage='usage: %prog [options] SUBREDDIT VIEW')
-    parser.add_option('-c', '--commenters', type='int', default=10,
-                      help='Number of top commenters to display '
-                      '[default %default]')
-    parser.add_option('-d', '--distinguished', action='store_true',
-                      help=('Include distinguished subissions and '
-                            'comments (default: False). Note that regular '
-                            'comments of distinguished submissions will still '
-                            'be included.'))
-    parser.add_option('-s', '--submitters', type='int', default=10,
-                      help='Number of top submitters to display '
-                      '[default %default]')
+    parser = arg_parser(usage="usage: %prog [options] SUBREDDIT VIEW")
+    parser.add_option(
+        "-c",
+        "--commenters",
+        type="int",
+        default=10,
+        help="Number of top commenters to display " "[default %default]",
+    )
+    parser.add_option(
+        "-d",
+        "--distinguished",
+        action="store_true",
+        help=(
+            "Include distinguished subissions and "
+            "comments (default: False). Note that regular "
+            "comments of distinguished submissions will still "
+            "be included."
+        ),
+    )
+    parser.add_option(
+        "-s",
+        "--submitters",
+        type="int",
+        default=10,
+        help="Number of top submitters to display " "[default %default]",
+    )
 
     options, args = parser.parse_args()
 
@@ -397,7 +455,7 @@ def main():
     logger.addHandler(logging.StreamHandler())
 
     if len(args) != 2:
-        parser.error('SUBREDDIT and VIEW must be provided')
+        parser.error("SUBREDDIT and VIEW must be provided")
     subreddit, view = args
     check_for_updates(options)
     srs = SubredditStats(subreddit, options.site, options.distinguished)

@@ -13,4 +13,4 @@ class IntegrationTest(unittest.TestCase):
 
         # Disable response compression in order to see the response bodies in
         # the betamax cassettes.
-        http.headers['Accept-Encoding'] = 'identity'
+        http.headers["Accept-Encoding"] = "identity"
