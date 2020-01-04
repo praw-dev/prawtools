@@ -19,7 +19,6 @@ python:
   - 3.8
 script:
   - coverage run --source=prawtools --module pytest
-  - coveralls
 stages:
   - lint
   - test
