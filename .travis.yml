@@ -1,8 +1,8 @@
 cache: pip
-install: pip install coveralls
+install: pip install .[ci,test]
 jobs:
   include:
-    - install: pip install black flake8 pydocstyle
+    - install: pip install .[lint]
       python: 3.8
       script:
         - black --check --verbose *.py prawtools tests
@@ -18,7 +18,7 @@ python:
   - 3.7
   - 3.8
 script:
-  - coverage run --source=prawtools setup.py test
+  - coverage run --source=prawtools --module pytest
   - coveralls
 stages:
   - lint
