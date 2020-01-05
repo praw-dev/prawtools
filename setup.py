@@ -14,6 +14,19 @@ with open(path.join(HERE, PACKAGE_NAME, "__init__.py"), encoding="utf-8") as fp:
     VERSION = re.search('__version__ = "([^"]+)', fp.read()).group(1)
 
 
+extras = {
+    "ci": ["coveralls"],
+    "lint": ["black", "flake8", "pydocstyle"],
+    "test": [
+        "betamax >=0.7.1, <0.8",
+        "betamax-serializers >=0.2.0, <0.3",
+        "mock ==1.0.1",
+        "pytest",
+    ],
+}
+required = ["praw >=4.0.0, <7", "six >=1, <2"]
+
+
 setup(
     name=PACKAGE_NAME,
     author="Bryce Boe",
@@ -39,17 +52,12 @@ setup(
             "subreddit_stats = prawtools.stats:main",
         ]
     },
-    install_requires=["praw >=4.0.0, <7", "six >=1, <2"],
+    extras_require=extras,
+    install_requires=required,
     keywords="reddit mod moderator subreddit statistics tools",
     license="Simplified BSD License",
     long_description=README,
     packages=[PACKAGE_NAME],
-    test_suite="tests",
-    tests_require=[
-        "betamax >=0.7.1, <0.8",
-        "betamax-serializers >=0.2.0, <0.3",
-        "mock ==1.0.1",
-    ],
     url="https://github.com/praw-dev/prawtools",
     version=VERSION,
 )
