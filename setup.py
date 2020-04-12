@@ -21,6 +21,7 @@ extras = {
         "betamax >=0.7.1, <0.8",
         "betamax-serializers >=0.2.0, <0.3",
         "mock ==1.0.1",
+        "coverage",
         "pytest",
     ],
 }
