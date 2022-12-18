@@ -105,7 +105,7 @@ class SubredditStats(object):
     def _user(user):
         return "_deleted_" if user is None else tt("/u/{}").format(user)
 
-    def __init__(self, subreddit, site, distinguished, reddit=None):
+    def __init__(self, subreddit, site, distinguished, output_subreddit, reddit=None):
         """Initialize the SubredditStats instance with config options."""
         self.commenters = defaultdict(list)
         self.comments = []
@@ -115,7 +115,7 @@ class SubredditStats(object):
         self.reddit = reddit or Reddit(site, check_for_updates=False, user_agent=AGENT)
         self.submissions = {}
         self.submitters = defaultdict(list)
-        self.submit_subreddit = self.reddit.subreddit("subreddit_stats")
+        self.submit_subreddit = self.reddit.subreddit(output_subreddit)
         self.subreddit = self.reddit.subreddit(subreddit)
 
     def basic_stats(self):
@@ -443,6 +443,13 @@ def main():
         default=10,
         help="Number of top submitters to display " "[default %default]",
     )
+    parser.add_option(
+        "-o",
+        "--output",
+        type="string",
+        default='subreddit_stats',
+        help="Subreddit to publish results to " "[default %default]",
+    )
 
     options, args = parser.parse_args()
 
@@ -458,7 +465,7 @@ def main():
         parser.error("SUBREDDIT and VIEW must be provided")
     subreddit, view = args
     check_for_updates(options)
-    srs = SubredditStats(subreddit, options.site, options.distinguished)
+    srs = SubredditStats(subreddit, options.site, options.distinguished, options.output)
     result = srs.run(view, options.submitters, options.commenters)
     if result:
         print(result.permalink)
