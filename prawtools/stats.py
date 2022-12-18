@@ -78,7 +78,7 @@ class SubredditStats(object):
         if isinstance(item, MiniSubmission):
             return tt("/comments/{}").format(item.id)
         else:
-            return tt("/comments/{}//{}?context=1").format(item.submission.id, item.id)
+            return tt("/comments/{}/_/{}?context=1").format(item.submission.id, item.id)
 
     @staticmethod
     def _points(points):
