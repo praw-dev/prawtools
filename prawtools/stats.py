@@ -447,7 +447,7 @@ def main():
         "-o",
         "--output",
         type="string",
-        default='subreddit_stats',
+        default="subreddit_stats",
         help="Subreddit to publish results to " "[default %default]",
     )
 

@@ -8,7 +8,7 @@ from . import IntegrationTest
 class StatsTest(IntegrationTest):
     def setUp(self):
         """Setup runs before all test cases."""
-        self.srs = SubredditStats("redditdev", None, None)
+        self.srs = SubredditStats("redditdev", None, None, None)
         super(StatsTest, self).setUp(self.srs.reddit._core._requestor._http)
 
     def test_recent(self):
